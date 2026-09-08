@@ -1,0 +1,10 @@
+{
+  "description": "Discover verified China manufacturers with structured data and manual verification, ensuring trust and reliability for global buyers seeking quality suppliers.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
