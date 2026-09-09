@@ -64,6 +64,7 @@ body {
 .admin-form-help, .admin-section-help { color: #6b7280; font-size: 12px; line-height: 1.6; margin: 0; }
 .admin-form-help { display: flex; align-items: center; gap: 8px; }
 .admin-section-help { margin: -6px 0 16px; }
+.admin-field-hint { color: #8a94a3; font-size: 10px; font-weight: 500; }
 .admin-field.full { grid-column: 1 / -1; }
 .admin-field input, .admin-field textarea, .admin-field select, .admin-filterbar input, .admin-filterbar select { width: 100%; padding: 10px 11px; border: 1px solid #d1d5db; border-radius: 7px; background: #fff; color: #111827; font-size: 13px; font-weight: 400; }
 .admin-field textarea { min-height: 90px; resize: vertical; }
