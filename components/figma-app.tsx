@@ -2537,6 +2537,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "", name: "", company: "", country: "" });
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -2562,6 +2563,21 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
       setError(reason instanceof Error ? reason.message : "Unable to create account");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const resendConfirmation = async () => {
+    setResending(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/resend-confirmation", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: form.email }) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Unable to resend confirmation email");
+      setStatus(body.message);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to resend confirmation email");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -2626,7 +2642,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
             </div>
 
             {error && <p role="alert" style={{ color: "#B91C1C", fontSize: 12.5, marginBottom: 12 }}>{error}</p>}
-            {status && <p role="status" style={{ color: "#065F46", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 7, padding: 10, fontSize: 12.5, marginBottom: 12 }}>{status}</p>}
+            {status && <div role="status" style={{ color: "#065F46", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 7, padding: 10, fontSize: 12.5, marginBottom: 12 }}><p>{status}</p><button type="button" disabled={resending} onClick={resendConfirmation} style={{ border: 0, background: "none", color: "#1E40AF", fontWeight: 700, padding: "8px 0 0", cursor: "pointer" }}>{resending ? "Sending…" : "Resend confirmation email"}</button></div>}
             <button onClick={submit} disabled={busy || !form.email || form.password.length < 8 || form.name.trim().length < 2} style={{ width: "100%", padding: "10px 0", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 14, fontWeight: 600, border: "none", cursor: busy ? "wait" : "pointer", opacity: busy || !form.email || form.password.length < 8 || form.name.trim().length < 2 ? 0.6 : 1, marginBottom: 16 }}>{busy ? "Creating account…" : "Create Account"}</button>
 
             <p style={{ textAlign: "center", fontSize: 12.5, color: "#9CA3AF" }}>

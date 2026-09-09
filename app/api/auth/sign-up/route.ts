@@ -15,7 +15,12 @@ export async function POST(request: Request) {
   try {
     const { email, password, ...metadata } = schema.parse(await request.json());
     const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: metadata } });
+    const callbackUrl = new URL("/auth/callback?next=/dashboard", request.url);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: metadata, emailRedirectTo: callbackUrl.toString() },
+    });
     if (error) return noStoreJson({ error: error.message }, { status: 400 });
     return noStoreJson({ user: data.user ? { id: data.user.id, email: data.user.email } : null, requiresEmailConfirmation: !data.session }, { status: 201 });
   } catch (error) {
