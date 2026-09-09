@@ -9,7 +9,7 @@ const bodySchema = z.record(z.string(), z.unknown());
 
 export async function PATCH(request: Request, context: RouteContext<"/api/admin/[resource]/[id]">) {
   try {
-    await requireAdmin();
+    const adminUser = await requireAdmin();
     const { resource, id } = await context.params;
     const config = getAdminResource(resource);
     if (!config) return noStoreJson({ error: "Unknown admin resource" }, { status: 404 });
@@ -18,6 +18,12 @@ export async function PATCH(request: Request, context: RouteContext<"/api/admin/
     const payload = sanitizeAdminPayload(bodySchema.parse(await request.json()), config.update);
     if (Object.keys(payload).length === 0) return noStoreJson({ error: "No supported fields supplied" }, { status: 400 });
     const supabase = createSupabaseAdminClient();
+    if (resource === "verification-records" && "status" in payload) {
+      payload.verified_by = payload.status === "verified" ? adminUser.id : null;
+    }
+    if (resource === "contacts" && ["verified_phone", "verified_email", "whatsapp", "wechat", "contact_verification_method"].some((field) => field in payload)) {
+      payload.last_contact_verified_at = new Date().toISOString();
+    }
     if (resource === "factories" && payload.is_published === true) {
       const { data: checks, error: checkError } = await supabase
         .from("verification_records")

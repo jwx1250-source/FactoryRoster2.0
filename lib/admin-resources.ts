@@ -9,21 +9,21 @@ type ResourceConfig = {
 export const ADMIN_RESOURCES = {
   factories: {
     table: "factories",
-    create: ["slug", "company_name", "chinese_name", "record_id", "industry_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "overview", "is_published", "is_indexable", "last_verified_at", "seo_title", "seo_description", "internal_notes", "source_notes"],
-    update: ["slug", "company_name", "chinese_name", "record_id", "industry_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "overview", "is_published", "is_indexable", "last_verified_at", "seo_title", "seo_description", "internal_notes", "source_notes"],
+    create: ["company_name", "chinese_name", "industry_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "overview", "is_published", "is_indexable", "seo_title", "seo_description", "internal_notes", "source_notes"],
+    update: ["company_name", "chinese_name", "industry_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "overview", "is_published", "is_indexable", "seo_title", "seo_description", "internal_notes", "source_notes"],
     orderBy: "updated_at",
   },
   contacts: {
     table: "factory_contacts",
-    create: ["factory_id", "contact_person", "position", "verified_phone", "verified_email", "whatsapp", "wechat", "contact_verification_method", "last_contact_verified_at", "is_locked", "is_active", "internal_notes"],
-    update: ["contact_person", "position", "verified_phone", "verified_email", "whatsapp", "wechat", "contact_verification_method", "last_contact_verified_at", "is_locked", "is_active", "internal_notes"],
+    create: ["factory_id", "contact_person", "position", "verified_phone", "verified_email", "whatsapp", "wechat", "contact_verification_method", "is_active", "internal_notes"],
+    update: ["contact_person", "position", "verified_phone", "verified_email", "whatsapp", "wechat", "contact_verification_method", "is_active", "internal_notes"],
     orderBy: "updated_at",
     deletable: true,
   },
   "verification-records": {
     table: "verification_records",
-    create: ["factory_id", "verification_type", "status", "checked_items", "verification_method", "verified_at", "verified_by", "evidence_note", "internal_note"],
-    update: ["verification_type", "status", "checked_items", "verification_method", "verified_at", "verified_by", "evidence_note", "internal_note"],
+    create: ["factory_id", "verification_type", "status", "checked_items", "verification_method", "evidence_note", "internal_note"],
+    update: ["verification_type", "status", "checked_items", "verification_method", "evidence_note", "internal_note"],
     orderBy: "updated_at",
   },
   "verification-requests": {

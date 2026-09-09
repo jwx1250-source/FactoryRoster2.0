@@ -56,6 +56,14 @@ body {
 .admin-form-section h2 { font-size: 16px; margin: 0 0 16px; }
 .admin-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
 .admin-field { display: grid; gap: 6px; color: #4b5563; font-size: 12px; font-weight: 600; }
+.admin-field-label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.admin-required, .admin-optional, .admin-automatic { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 7px; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.admin-required { background: #fef2f2; color: #b91c1c; }
+.admin-optional { background: #f3f4f6; color: #6b7280; }
+.admin-automatic { background: #eff6ff; color: #1e40af; }
+.admin-form-help, .admin-section-help { color: #6b7280; font-size: 12px; line-height: 1.6; margin: 0; }
+.admin-form-help { display: flex; align-items: center; gap: 8px; }
+.admin-section-help { margin: -6px 0 16px; }
 .admin-field.full { grid-column: 1 / -1; }
 .admin-field input, .admin-field textarea, .admin-field select, .admin-filterbar input, .admin-filterbar select { width: 100%; padding: 10px 11px; border: 1px solid #d1d5db; border-radius: 7px; background: #fff; color: #111827; font-size: 13px; font-weight: 400; }
 .admin-field textarea { min-height: 90px; resize: vertical; }

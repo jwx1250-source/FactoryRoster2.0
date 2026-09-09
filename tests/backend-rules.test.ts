@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { applyContactUnlock, canIndexFactory, canPublishFactory, contactPreview } from "../lib/domain/rules";
 import { PLAN_CATALOG } from "../lib/plans";
 
-const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql"]
+const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql", "20260909073911_automate_factory_internal_fields.sql"]
   .map((file) => readFileSync(resolve(process.cwd(), "supabase/migrations", file), "utf8"))
   .join("\n");
 
@@ -73,6 +73,15 @@ describe("payment and database safeguards", () => {
 });
 
 describe("admin foundation safeguards", () => {
+  it("generates immutable factory identifiers and verification metadata", () => {
+    expect(migration).toContain("factory_record_number_seq");
+    expect(migration).toContain("factories_populate_system_fields");
+    expect(migration).toContain("new.record_id := 'FR-' || to_char(current_date, 'YYYY')");
+    expect(migration).toContain("new.slug := slug_base || '-' || lpad(sequence_number::text, 6, '0')");
+    expect(migration).toContain("verification_records_populate_system_fields");
+    expect(migration).toContain("verification_records_sync_factory_last_verified");
+  });
+
   it("creates all three verification placeholders for every new factory", () => {
     expect(migration).toContain("factory_create_verification_placeholders");
     expect(migration).toContain("government_registration");

@@ -48,6 +48,10 @@ export async function POST(request: Request, context: RouteContext<"/api/admin/[
       payload.is_published = false;
       payload.is_indexable = false;
     }
+    if (resource === "contacts") {
+      payload.is_locked = true;
+      payload.last_contact_verified_at = new Date().toISOString();
+    }
     if (Object.keys(payload).length === 0) return noStoreJson({ error: "No supported fields supplied" }, { status: 400 });
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from(config.table).insert(payload).select().single();
