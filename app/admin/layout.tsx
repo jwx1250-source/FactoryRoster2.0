@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { requireAdmin } from "@/lib/auth";
+import { AccessError, requireAdmin } from "@/lib/auth";
 import { AdminNav } from "@/components/admin-shell";
 
 export const dynamic = "force-dynamic";
@@ -8,14 +8,24 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   try {
     await requireAdmin();
-  } catch {
-    redirect("/sign-in?next=/admin");
+  } catch (error) {
+    if (error instanceof AccessError && error.status === 401) {
+      redirect("/sign-in?next=/admin");
+    }
+    if (error instanceof AccessError && error.status === 403) {
+      return (
+        <main className="admin-denied">
+          <div><p className="admin-kicker">403</p><h1>Access denied</h1><p>You do not have permission to access this page.</p></div>
+        </main>
+      );
+    }
+    throw error;
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#F7F8FA", padding: "40px 24px" }}>
-      <div style={{ maxWidth: 1180, margin: "0 auto", background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: 28 }}>
-        <p style={{ fontFamily: "monospace", fontSize: 11, color: "#1E40AF", marginBottom: 8 }}>FACTORYROSTER ADMIN</p>
+    <main className="admin-root">
+      <div className="admin-shell">
+        <p className="admin-kicker">FACTORYROSTER ADMIN</p>
         <AdminNav />
         {children}
       </div>

@@ -5,10 +5,9 @@ import { describe, expect, it } from "vitest";
 import { applyContactUnlock, canIndexFactory, canPublishFactory, contactPreview } from "../lib/domain/rules";
 import { PLAN_CATALOG } from "../lib/plans";
 
-const migration = readFileSync(
-  resolve(process.cwd(), "supabase/migrations/20260908091039_create_factoryroster_schema.sql"),
-  "utf8",
-);
+const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql"]
+  .map((file) => readFileSync(resolve(process.cwd(), "supabase/migrations", file), "utf8"))
+  .join("\n");
 
 describe("factory publication rules", () => {
   it("requires all three verification checks", () => {
@@ -34,7 +33,7 @@ describe("locked contact contract", () => {
   it("returns only a safe preview before unlock", () => {
     expect(contactPreview(true)).toEqual({
       available: true,
-      label: "Verified contact available",
+      label: "Verified contact record available",
       fields: ["Phone", "Email", "Contact person"],
     });
     expect(JSON.stringify(contactPreview(true))).not.toMatch(/@|\+86/);
@@ -70,5 +69,25 @@ describe("payment and database safeguards", () => {
   it("keeps locked contacts unavailable to anonymous database clients", () => {
     expect(migration).toContain("revoke all on all tables in schema public from anon, authenticated");
     expect(migration).not.toMatch(/grant select on public\.factory_contacts[^;]*to anon/);
+  });
+});
+
+describe("admin foundation safeguards", () => {
+  it("creates all three verification placeholders for every new factory", () => {
+    expect(migration).toContain("factory_create_verification_placeholders");
+    expect(migration).toContain("government_registration");
+    expect(migration).toContain("business_contact");
+    expect(migration).toContain("factory_evidence");
+  });
+
+  it("keeps source notes and internal notes out of public factory grants", () => {
+    const publicGrant = migration.match(/grant select \([\s\S]*?\) on public\.factories to anon, authenticated;/)?.[0] ?? "";
+    expect(publicGrant).not.toContain("internal_notes");
+    expect(publicGrant).not.toContain("source_notes");
+  });
+
+  it("limits manual credit adjustments to the service role", () => {
+    expect(migration).toContain("revoke execute on function public.admin_adjust_contact_credits(uuid, integer, text) from public, anon, authenticated");
+    expect(migration).toContain("grant execute on function public.admin_adjust_contact_credits(uuid, integer, text) to service_role");
   });
 });

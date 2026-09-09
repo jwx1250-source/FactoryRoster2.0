@@ -11,7 +11,7 @@ import {
   SprayCan,
 } from "lucide-react";
 
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://factoryroster.com";
+export const siteUrl = "https://factoryroster.com";
 
 export const industries = [
   { name: "LED Lighting", slug: "led-lighting", detail: "Fixtures · Drivers · Components", icon: LampDesk },

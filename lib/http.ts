@@ -1,8 +1,12 @@
 import { ZodError } from "zod";
 
 import { MissingConfigurationError } from "@/lib/env";
+import { AccessError } from "@/lib/auth";
 
 export function apiError(error: unknown) {
+  if (error instanceof AccessError) {
+    return Response.json({ error: error.message }, { status: error.status });
+  }
   if (error instanceof MissingConfigurationError) {
     return Response.json({ error: error.message, code: "SERVICE_NOT_CONFIGURED" }, { status: 503 });
   }

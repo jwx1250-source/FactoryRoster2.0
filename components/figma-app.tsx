@@ -953,14 +953,18 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
 
   const unlock = async () => {
     if (!factory.slug) return;
+    if (!window.confirm("Unlock this Verified Contact Record for 1 Contact Credit?")) return;
     setUnlockBusy(true);
     setUnlockError("");
     try {
       const response = await fetch(`/api/factories/${encodeURIComponent(factory.slug)}/unlock`, { method: "POST" });
       const body = await response.json();
       if (!response.ok) {
-        if (body.code === "AUTH_REQUIRED") throw new Error("Please sign in before unlocking a verified contact.");
-        if (body.code === "INSUFFICIENT_CREDITS") throw new Error("No contact credits are available yet. Credit purchases will open after Stripe is configured.");
+        if (body.code === "AUTH_REQUIRED") {
+          router.push(`/sign-in?next=${encodeURIComponent(`/factories/${factory.slug}`)}`);
+          return;
+        }
+        if (body.code === "INSUFFICIENT_CREDITS") throw new Error("You need contact credits to unlock this record. Contact credit purchase is coming soon.");
         throw new Error(body.error || "Unable to unlock contact");
       }
       setContact(body.contact);

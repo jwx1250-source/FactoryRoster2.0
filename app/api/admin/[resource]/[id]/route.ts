@@ -18,6 +18,26 @@ export async function PATCH(request: Request, context: RouteContext<"/api/admin/
     const payload = sanitizeAdminPayload(bodySchema.parse(await request.json()), config.update);
     if (Object.keys(payload).length === 0) return noStoreJson({ error: "No supported fields supplied" }, { status: 400 });
     const supabase = createSupabaseAdminClient();
+    if (resource === "factories" && payload.is_published === true) {
+      const { data: checks, error: checkError } = await supabase
+        .from("verification_records")
+        .select("verification_type,status")
+        .eq("factory_id", id);
+      if (checkError) throw checkError;
+      const verified = new Set((checks ?? []).filter((check) => check.status === "verified").map((check) => check.verification_type));
+      const required = [
+        ["government_registration", "Government Registration"],
+        ["business_contact", "Business Contact"],
+        ["factory_evidence", "Factory Evidence"],
+      ] as const;
+      const missing = required.filter(([type]) => !verified.has(type)).map(([, label]) => label);
+      if (missing.length) {
+        return noStoreJson({
+          error: "Factory cannot be published until Government Registration, Business Contact, and Factory Evidence are all verified.",
+          detail: `Cannot publish. Missing checks: ${missing.join(", ")}.`,
+        }, { status: 409 });
+      }
+    }
     const { data, error } = await supabase.from(config.table).update(payload).eq("id", id).select().maybeSingle();
     if (error) throw error;
     if (!data) return noStoreJson({ error: "Record not found" }, { status: 404 });

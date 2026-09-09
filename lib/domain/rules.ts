@@ -23,7 +23,7 @@ export function canIndexFactory(factory: {
 
 export function contactPreview(hasContact: boolean) {
   return hasContact
-    ? { available: true, label: "Verified contact available", fields: ["Phone", "Email", "Contact person"] }
+    ? { available: true, label: "Verified contact record available", fields: ["Phone", "Email", "Contact person"] }
     : { available: false, label: "No verified contact available", fields: [] };
 }
 
