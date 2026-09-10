@@ -2,30 +2,42 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { applyContactUnlock, canIndexFactory, canPublishFactory, contactPreview } from "../lib/domain/rules";
+import { applyContactUnlock, canIndexFactory, canPublishSupplier, contactPreview, supplierTypeLabel, supplyEvidenceLabel } from "../lib/domain/rules";
 import { PLAN_CATALOG } from "../lib/plans";
 
-const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql", "20260909073911_automate_factory_internal_fields.sql"]
+const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql", "20260909073911_automate_factory_internal_fields.sql", "20260910031558_expand_to_supplier_intelligence.sql"]
   .map((file) => readFileSync(resolve(process.cwd(), "supabase/migrations", file), "utf8"))
   .join("\n");
 
-describe("factory publication rules", () => {
+describe("supplier publication rules", () => {
   it("requires all three verification checks", () => {
-    expect(canPublishFactory([
+    expect(canPublishSupplier([
       { verification_type: "government_registration", status: "verified" },
       { verification_type: "business_contact", status: "verified" },
     ])).toBe(false);
 
-    expect(canPublishFactory([
+    expect(canPublishSupplier([
       { verification_type: "government_registration", status: "verified" },
       { verification_type: "business_contact", status: "verified" },
-      { verification_type: "factory_evidence", status: "verified" },
+      { verification_type: "supply_evidence", status: "verified" },
     ])).toBe(true);
   });
 
   it("requires sufficient content before indexing", () => {
     expect(canIndexFactory({ is_published: true, overview: "short", main_products: ["LED"] })).toBe(false);
     expect(canIndexFactory({ is_published: true, overview: "A".repeat(80), main_products: ["LED"] })).toBe(true);
+  });
+});
+
+describe("supplier intelligence labels", () => {
+  it("does not call trading companies manufacturers", () => {
+    expect(supplierTypeLabel("trading_company")).toBe("Verified Trading Supplier");
+    expect(supplyEvidenceLabel("supply_chain_evidence")).toBe("Supply Chain Evidence");
+  });
+
+  it("keeps manufacturer factory evidence support", () => {
+    expect(supplierTypeLabel("manufacturer")).toBe("Verified Manufacturer");
+    expect(supplyEvidenceLabel("factory_evidence")).toBe("Factory Evidence");
   });
 });
 
@@ -86,7 +98,16 @@ describe("admin foundation safeguards", () => {
     expect(migration).toContain("factory_create_verification_placeholders");
     expect(migration).toContain("government_registration");
     expect(migration).toContain("business_contact");
-    expect(migration).toContain("factory_evidence");
+    expect(migration).toContain("supply_evidence");
+  });
+
+  it("keeps unpublished suppliers out of public search", () => {
+    expect(migration).toMatch(/search_verified_suppliers[\s\S]*where f\.is_published/);
+  });
+
+  it("resets supply verification when supplier classification changes", () => {
+    expect(migration).toContain("reset_supply_evidence_after_supplier_change");
+    expect(migration).toContain("set status = 'pending'");
   });
 
   it("keeps source notes and internal notes out of public factory grants", () => {

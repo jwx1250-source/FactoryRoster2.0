@@ -3,7 +3,7 @@ import AdminResourceTable from "@/components/admin-resource-table";
 
 const links = [
   ["Dashboard", "/admin"],
-  ["Factories", "/admin/factories"],
+  ["Suppliers", "/admin/factories"],
   ["Contacts", "/admin/contacts"],
   ["Verification Records", "/admin/verification-records"],
   ["Verification Requests", "/admin/verification-requests"],

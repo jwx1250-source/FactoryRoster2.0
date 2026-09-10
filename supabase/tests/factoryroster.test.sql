@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(17);
+select plan(24);
 
 select has_table('public', 'factories', 'factories table exists');
 select has_table('public', 'factory_contacts', 'locked contacts table exists');
@@ -12,6 +12,13 @@ select has_function('public', 'grant_stripe_credits', array['text','text','uuid'
 select has_function('public', 'admin_adjust_contact_credits', array['uuid','integer','text'], 'manual credit adjustment function exists');
 select has_column('public', 'factories', 'internal_notes', 'factories have internal notes');
 select has_column('public', 'factory_contacts', 'is_active', 'contacts can be deactivated');
+select has_column('public', 'factories', 'supplier_type', 'supplier type is recorded');
+select has_column('public', 'factories', 'supply_evidence_type', 'supply evidence type is recorded');
+select has_column('public', 'factories', 'moq_level', 'MOQ fit is recorded');
+select has_column('public', 'factories', 'supports_small_orders', 'small order support is recorded');
+select has_column('public', 'factories', 'supports_sample_orders', 'sample order support is recorded');
+select has_column('public', 'factories', 'supports_private_label', 'private label support is recorded');
+select has_column('public', 'factories', 'supply_model', 'supply model is recorded');
 
 select ok((select relrowsecurity from pg_class where oid = 'public.factories'::regclass), 'factories has RLS enabled');
 select ok((select relrowsecurity from pg_class where oid = 'public.factory_contacts'::regclass), 'factory_contacts has RLS enabled');

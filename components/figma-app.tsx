@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supplierTypeLabel, supplyEvidenceLabel } from "@/lib/domain/rules";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -122,6 +123,13 @@ interface SearchResult {
   mainProducts: string[];
   verifiedDate: string;
   hasVerifiedContact?: boolean;
+  supplierType?: string;
+  supplyEvidenceType?: string;
+  moqLevel?: string;
+  supportsSmallOrders?: boolean;
+  supportsSampleOrders?: boolean;
+  supportsPrivateLabel?: boolean;
+  supplyModel?: string;
 }
 
 interface UnlockedContact {
@@ -146,8 +154,8 @@ function apiFactoryToResult(factory: Record<string, unknown>): SearchResult {
   return {
     id: String(factory.record_id ?? factory.id ?? ""),
     slug: String(factory.slug ?? ""),
-    name: String(factory.company_name ?? "Unnamed factory"),
-    industry: String(factory.industry_name ?? "Manufacturing"),
+    name: String(factory.company_name ?? "Unnamed supplier"),
+    industry: String(factory.industry_name ?? "Supplier"),
     province: String(factory.province ?? ""),
     city: String(factory.city ?? ""),
     established: Number(factory.established_year ?? 0),
@@ -157,6 +165,13 @@ function apiFactoryToResult(factory: Record<string, unknown>): SearchResult {
     mainProducts: Array.isArray(factory.main_products) ? factory.main_products.map(String) : [],
     verifiedDate: formatDate(factory.last_verified_at as string | null),
     hasVerifiedContact: Boolean(factory.has_verified_contact),
+    supplierType: String(factory.supplier_type ?? "manufacturer"),
+    supplyEvidenceType: String(factory.supply_evidence_type ?? "factory_evidence"),
+    moqLevel: String(factory.moq_level ?? "unknown"),
+    supportsSmallOrders: Boolean(factory.supports_small_orders),
+    supportsSampleOrders: Boolean(factory.supports_sample_orders),
+    supportsPrivateLabel: Boolean(factory.supports_private_label),
+    supplyModel: String(factory.supply_model ?? "factory_direct"),
   };
 }
 
@@ -374,14 +389,13 @@ function Hero({ onSearch }: { onSearch: (q: string) => void }) {
     <section style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
       <div style={{ maxWidth: 820, margin: "0 auto", padding: "80px 32px 72px", textAlign: "center" }}>
         <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 24 }}>
-          China Factory Intelligence · Verified Before Listed
+          China Supplier Intelligence · Verified Before Listed
         </p>
         <h1 style={{ fontSize: "clamp(40px,6vw,62px)", fontWeight: 800, letterSpacing: "-2.5px", lineHeight: 1.06, color: "#0D1117", marginBottom: 20 }}>
-          Find Verified<br />China Manufacturers
+          Find Verified China Suppliers
         </h1>
         <p style={{ fontSize: 16, fontWeight: 400, color: "#6B7280", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 40px" }}>
-          Search structured factory records across China.{" "}
-          <span style={{ color: "#374151", fontWeight: 500 }}>Every published record is manually verified before being listed.</span>
+          Search verified China manufacturers, distributors, exporters, and wholesalers before you reach out.
         </p>
         <div style={{ display: "flex", alignItems: "center", background: "#fff", border: "1.5px solid #D1D5DB", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.04)", overflow: "hidden", transition: "border-color 0.15s" }}
           onFocusCapture={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#1E40AF"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 3px rgba(30,64,175,0.08)"; }}
@@ -390,18 +404,18 @@ function Hero({ onSearch }: { onSearch: (q: string) => void }) {
             <span style={{ color: "#9CA3AF", display: "flex" }}><SearchIcon /></span>
             <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && query.trim()) onSearch(query.trim()); }}
-              placeholder={`Search products or factory categories — e.g. "LED lights"`}
+              placeholder={`Search products or supplier categories — e.g. "LED lights"`}
               style={{ flex: 1, padding: "15px 0", fontSize: 15, color: "#0D1117", background: "transparent", border: "none", outline: "none", fontFamily: "inherit" }} />
           </div>
           <div style={{ padding: 6, paddingLeft: 0 }}>
             <button onClick={() => onSearch(query.trim() || "LED lights")}
               style={{ padding: "9px 22px", borderRadius: 7, background: "#1E40AF", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", letterSpacing: "-0.1px" }}>
-              Search Factories
+              Search Suppliers
             </button>
           </div>
         </div>
         <div style={{ marginTop: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 24 }}>
-          {["Government Registration", "Business Contact", "Factory Verification"].map((t) => (
+          {["Government Registration", "Business Contact", "Supply Evidence"].map((t) => (
             <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 500, color: "#374151" }}>
               <VerifiedDot />{t}
             </span>
@@ -418,7 +432,7 @@ function Industries({ onSearch }: { onSearch: (q: string) => void }) {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117" }}>Popular Verified Industries</h2>
-          <Mono color="#9CA3AF">Every listed factory has passed our verification checks</Mono>
+          <Mono color="#9CA3AF">Every listed supplier has passed our verification checks</Mono>
         </div>
         <a href="#" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#1E40AF", textDecoration: "none" }}>View all <ChevronRight /></a>
       </div>
@@ -435,8 +449,8 @@ function Industries({ onSearch }: { onSearch: (q: string) => void }) {
             <p style={{ fontSize: 13, fontWeight: 600, color: "#0D1117", letterSpacing: "-0.1px", marginBottom: 6, lineHeight: 1.3 }}>{cat.name}</p>
             <Mono color="#9CA3AF">
               {parseInt(cat.count.replace(",", "")) < 100
-                ? "Verified factories being added"
-                : `${cat.count} verified factories`}
+                ? "Verified suppliers being added"
+                : `${cat.count} verified suppliers`}
             </Mono>
           </a>
         ))}
@@ -449,7 +463,7 @@ function VerificationSection() {
   const steps = [
     { key: "gov", icon: GovIcon, label: "Government Registration", desc: "Business registration confirmed against official Chinese government databases. Validates legal entity status." },
     { key: "contact", icon: PhoneIcon, label: "Business Contact", desc: "Business phone, email address, and named contact person manually verified before record publication." },
-    { key: "factory", icon: FactoryIcon, label: "Factory Evidence", desc: "Physical factory evidence — photos or video — reviewed and confirmed before the record goes live." },
+    { key: "supply", icon: FactoryIcon, label: "Supply Evidence", desc: "Evidence matched to the supplier type — such as factory, authorization, export, inventory, or service capability evidence." },
   ];
   return (
     <section style={{ background: "#fff", borderTop: "1px solid #E9ECF1", borderBottom: "1px solid #E9ECF1" }}>
@@ -457,7 +471,7 @@ function VerificationSection() {
         <div style={{ marginBottom: 40 }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#10B981", marginBottom: 8 }}>Verification Protocol</p>
           <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", maxWidth: 520, lineHeight: 1.2, marginBottom: 8 }}>Verified Before Listed</h2>
-          <p style={{ fontSize: 14.5, color: "#6B7280", lineHeight: 1.6 }}>Every factory profile must pass three checks before it appears in search results.</p>
+          <p style={{ fontSize: 14.5, color: "#6B7280", lineHeight: 1.6 }}>Every supplier profile must pass verification before it appears in FactoryRoster search results.</p>
         </div>
         <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "#E9ECF1" }}>
           {steps.map(({ key, icon: Icon, label, desc }, i) => (
@@ -480,7 +494,7 @@ function VerificationSection() {
           <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", background: "#ECFDF5", border: "1px solid #6EE7B7", color: "#10B981", flexShrink: 0 }}><CheckIcon size={10} /></span>
           <p style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.5 }}>
             <span style={{ fontWeight: 600, color: "#374151" }}>All three checks are required.</span>{" "}
-            Factories that fail any step are not published and do not appear in search results.
+            Suppliers that fail any step are not published and do not appear in search results.
           </p>
         </div>
       </div>
@@ -502,7 +516,7 @@ function RecentRecords({ onDetail }: { onDetail: (f: SearchResult) => void }) {
       </div>
       <div className="r-scroll" style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, overflow: "hidden" }}>
         <div style={{ minWidth: 600, display: "grid", gridTemplateColumns: "1fr 140px 140px 130px 110px", padding: "10px 20px", background: "#F7F8FA", borderBottom: "1px solid #E9ECF1" }}>
-          {["Factory Name", "Industry", "Location", "Record ID", "Verified"].map((col) => (<FieldLabel key={col}>{col}</FieldLabel>))}
+          {["Supplier Name", "Industry", "Location", "Record ID", "Verified"].map((col) => (<FieldLabel key={col}>{col}</FieldLabel>))}
         </div>
         {RECENT_FACTORIES.map((f, i) => (
           <a key={f.id} href="#" onClick={(e) => { e.preventDefault(); onDetail(f); }}
@@ -512,7 +526,7 @@ function RecentRecords({ onDetail }: { onDetail: (f: SearchResult) => void }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontSize: 13.5, fontWeight: 600, color: "#0D1117", letterSpacing: "-0.1px" }}>{f.name}</span>
               <div style={{ display: "flex", gap: 5 }}>
-                {["Gov. Registration", "Business Contact", "Factory Evidence"].map((b) => (<VerifiedBadge key={b} label={b} />))}
+                {["Gov. Registration", "Business Contact", "Supply Evidence"].map((b) => (<VerifiedBadge key={b} label={b} />))}
               </div>
             </div>
             <Mono>{f.industry}</Mono>
@@ -530,7 +544,7 @@ function HowItWorks() {
   const steps = [
     { num: "01", icon: GovIcon, label: "Government Registration", desc: "Business registration verified against official Chinese government records." },
     { num: "02", icon: PhoneIcon, label: "Business Contact", desc: "Phone, email, and named contact person verified by our team." },
-    { num: "03", icon: FactoryIcon, label: "Factory Verification", desc: "Factory photos or video reviewed and confirmed. Physical evidence on file." },
+    { num: "03", icon: FactoryIcon, label: "Supply Evidence", desc: "Evidence appropriate to the supplier type is reviewed and recorded." },
     { num: "→", icon: () => <CheckIcon size={18} />, label: "Published", desc: "Record enters the live database. Visible to verified buyers on FactoryRoster.", published: true },
   ];
   return (
@@ -539,7 +553,7 @@ function HowItWorks() {
         <div style={{ marginBottom: 40, display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 6 }}>Verification Pipeline</p>
-            <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: "#0D1117" }}>How a factory record is verified</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: "#0D1117" }}>How a supplier record is verified</h2>
           </div>
           <Mono color="#9CA3AF">3 checks · manual review · sequential</Mono>
         </div>
@@ -566,7 +580,7 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
     {
       heading: "Product",
       items: [
-        { label: "Search Factories", nav: "Home" },
+        { label: "Search Suppliers", nav: "Home" },
         { label: "Browse Industries", nav: "Industries" },
         { label: "Verification", nav: "Verification" },
         { label: "Pricing", nav: "Pricing" },
@@ -578,7 +592,7 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
       items: [
         { label: "Contact Credits", nav: "Pricing" },
         { label: "Request Verification", nav: "Request Verification" },
-        { label: "Factory Reports", nav: "Request Verification" },
+        { label: "Supplier Reports", nav: "Request Verification" },
       ],
     },
     {
@@ -597,7 +611,7 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
         <div className="rfooter" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }}>
           <div>
             <div style={{ marginBottom: 12 }}><LogoWordmark size={24} /></div>
-            <p style={{ fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.7, maxWidth: 200 }}>China Factory Intelligence · Verified Before Listed. Not a marketplace.</p>
+            <p style={{ fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.7, maxWidth: 200 }}>China Supplier Intelligence · Verified Before Listed. Not a marketplace.</p>
             <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 14, height: 14, borderRadius: "50%", background: "#ECFDF5", border: "1px solid #6EE7B7", color: "#10B981" }}><CheckIcon size={8} /></span>
               <Mono color="#9CA3AF">Verified-only database</Mono>
@@ -668,6 +682,12 @@ function FilterOption({ label, count, active, onClick }: { label: string; count?
 function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDetail: (f: SearchResult) => void; onSearch: (q: string) => void }) {
   const [localQuery, setLocalQuery] = useState(query);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
+  const [supplierType, setSupplierType] = useState<string | null>(null);
+  const [moqLevel, setMoqLevel] = useState<string | null>(null);
+  const [supplyModel, setSupplyModel] = useState<string | null>(null);
+  const [smallOrders, setSmallOrders] = useState(false);
+  const [sampleOrders, setSampleOrders] = useState(false);
+  const [privateLabel, setPrivateLabel] = useState(false);
   const [sort, setSort] = useState("Relevance");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -678,18 +698,24 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
     const params = new URLSearchParams({ limit: "50" });
     if (query.trim()) params.set("q", query.trim());
     if (activeProvince) params.set("province", activeProvince);
+    if (supplierType) params.set("supplier_type", supplierType);
+    if (moqLevel) params.set("moq_level", moqLevel);
+    if (supplyModel) params.set("supply_model", supplyModel);
+    if (smallOrders) params.set("small_orders", "true");
+    if (sampleOrders) params.set("sample_orders", "true");
+    if (privateLabel) params.set("private_label", "true");
     fetch(`/api/factories?${params}`, { signal: controller.signal })
       .then(async (response) => {
         const body = await response.json();
-        if (!response.ok) throw new Error(body.error || "Unable to load factories");
-        setResults((body.factories ?? []).map(apiFactoryToResult));
+        if (!response.ok) throw new Error(body.error || "Unable to load suppliers");
+        setResults((body.suppliers ?? body.factories ?? []).map(apiFactoryToResult));
       })
       .catch((reason) => {
-        if (reason?.name !== "AbortError") setError(reason instanceof Error ? reason.message : "Unable to load factories");
+        if (reason?.name !== "AbortError") setError(reason instanceof Error ? reason.message : "Unable to load suppliers");
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [query, activeProvince]);
+  }, [query, activeProvince, supplierType, moqLevel, supplyModel, smallOrders, sampleOrders, privateLabel]);
 
   const selectProvince = (province: string | null) => {
     setLoading(true);
@@ -732,7 +758,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
           <div style={{ marginBottom: 24, padding: "10px 12px", borderRadius: 8, background: "#ECFDF5", border: "1px solid #A7F3D0", display: "flex", alignItems: "flex-start", gap: 7 }}>
             <span style={{ marginTop: 1, color: "#10B981", flexShrink: 0 }}><CheckIcon size={12} /></span>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "#065F46", marginBottom: 2 }}>Verified factories only</p>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#065F46", marginBottom: 2 }}>Verified suppliers only</p>
               <p style={{ fontSize: 11.5, color: "#6B7280", lineHeight: 1.5 }}>All results passed FactoryRoster's three-step verification</p>
             </div>
           </div>
@@ -745,11 +771,22 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
             <FilterOption label="WhatsApp / WeChat" />
           </FilterSection>
 
-          {/* Factory evidence */}
-          <FilterSection title="Factory Evidence">
-            <FilterOption label="Factory Photos" />
-            <FilterOption label="Factory Video" />
-            <FilterOption label="Workshop Evidence" />
+          <FilterSection title="Supplier Type">
+            {[["Manufacturer", "manufacturer"], ["Authorized Distributor", "authorized_distributor"], ["First-tier Agent", "first_tier_agent"], ["Trading Company", "trading_company"], ["Exporter", "exporter"], ["Wholesaler", "wholesaler"], ["Brand Owner", "brand_owner"], ["Sourcing Service Provider", "sourcing_service_provider"]].map(([label, value]) => <FilterOption key={value} label={label} active={supplierType === value} onClick={() => setSupplierType(supplierType === value ? null : value)} />)}
+          </FilterSection>
+
+          <FilterSection title="MOQ Fit">
+            {[["Sample supported", "sample_supported"], ["Low MOQ", "low_moq"], ["Standard MOQ", "standard_moq"], ["Bulk only", "bulk_only"]].map(([label, value]) => <FilterOption key={value} label={label} active={moqLevel === value} onClick={() => setMoqLevel(moqLevel === value ? null : value)} />)}
+          </FilterSection>
+
+          <FilterSection title="Order Support">
+            <FilterOption label="Small batch friendly" active={smallOrders} onClick={() => setSmallOrders(!smallOrders)} />
+            <FilterOption label="Sample order supported" active={sampleOrders} onClick={() => setSampleOrders(!sampleOrders)} />
+            <FilterOption label="Private label support" active={privateLabel} onClick={() => setPrivateLabel(!privateLabel)} />
+          </FilterSection>
+
+          <FilterSection title="Supply Model">
+            {[["Factory direct", "factory_direct"], ["Authorized distribution", "authorized_distribution"], ["First-tier agent", "first_tier_agent"], ["Wholesale inventory", "wholesale_inventory"], ["Export trading", "export_trading"], ["Sourcing service", "sourcing_service"]].map(([label, value]) => <FilterOption key={value} label={label} active={supplyModel === value} onClick={() => setSupplyModel(supplyModel === value ? null : value)} />)}
           </FilterSection>
 
           {/* Province */}
@@ -773,7 +810,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
           {/* Result summary */}
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 4 }}>
-              {loading ? "Loading verified factories…" : `${filtered.length} Verified ${query || "China"} Manufacturers`}
+              {loading ? "Loading verified suppliers…" : `${filtered.length} Verified ${query || "China"} Suppliers`}
             </h1>
             <p style={{ fontSize: 13, color: "#6B7280" }}>
               All results passed FactoryRoster's three-step verification process.
@@ -796,7 +833,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {error && <div role="alert" style={{ padding: 16, borderRadius: 8, background: "#FEF2F2", color: "#B91C1C", border: "1px solid #FECACA" }}>{error}</div>}
-            {!loading && !error && filtered.length === 0 && <div style={{ padding: 28, borderRadius: 10, background: "#fff", border: "1px solid #E9ECF1", color: "#6B7280" }}>No verified factories matched this search.</div>}
+            {!loading && !error && filtered.length === 0 && <div style={{ padding: 28, borderRadius: 10, background: "#fff", border: "1px solid #E9ECF1", color: "#6B7280" }}>No verified suppliers matched this search.</div>}
             {filtered.map((r) => (
               <ResultCard key={r.id} result={r} onDetail={onDetail} />
             ))}
@@ -823,7 +860,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <button onClick={() => onDetail(r)}
             style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 6, border: "1px solid #DBEAFE", background: "#EFF3FF", fontSize: 12.5, fontWeight: 600, color: "#1E40AF", cursor: "pointer" }}>
-            View Factory <ArrowRight />
+            View Supplier <ArrowRight />
           </button>
           <button onClick={() => onDetail(r)}
             style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 6, border: "1px solid #1E40AF", background: "#fff", fontSize: 12.5, fontWeight: 600, color: "#1E40AF", cursor: "pointer" }}>
@@ -834,6 +871,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
 
       {/* Row 2: meta */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10, flexWrap: "wrap" as const }}>
+        <span style={{ padding: "3px 8px", borderRadius: 5, background: "#ECFDF5", border: "1px solid #A7F3D0", fontSize: 11, fontWeight: 600, color: "#047857" }}>{supplierTypeLabel(r.supplierType)}</span>
         <Mono color="#6B7280">{r.industry}</Mono>
         <span style={{ width: 1, height: 12, background: "#E5E7EB" }} />
         <Mono color="#6B7280">{r.city}, {r.province}, China</Mono>
@@ -862,7 +900,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
           <div style={{ display: "flex", gap: 5 }}>
             <VerifiedBadge label="Gov. Registration" />
             <VerifiedBadge label="Business Contact" />
-            <VerifiedBadge label="Factory Evidence" />
+            <VerifiedBadge label={supplyEvidenceLabel(r.supplyEvidenceType)} />
           </div>
           <span style={{ width: 1, height: 14, background: "#E5E7EB" }} />
           <Mono color="#9CA3AF">Last verified {r.verifiedDate}</Mono>
@@ -942,11 +980,11 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
     fetch(`/api/factories/${encodeURIComponent(factory.slug)}`, { signal: controller.signal })
       .then(async (response) => {
         const body = await response.json();
-        if (!response.ok) throw new Error(body.error || "Unable to load factory profile");
-        setProfile(body.factory);
+        if (!response.ok) throw new Error(body.error || "Unable to load supplier profile");
+        setProfile(body.supplier ?? body.factory);
       })
       .catch((reason) => {
-        if (reason?.name !== "AbortError") setProfileError(reason instanceof Error ? reason.message : "Unable to load factory profile");
+        if (reason?.name !== "AbortError") setProfileError(reason instanceof Error ? reason.message : "Unable to load supplier profile");
       });
     return () => controller.abort();
   }, [factory.slug]);
@@ -981,13 +1019,16 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
   const products = Array.isArray(profile?.main_products) ? profile.main_products.map(String) : d.mainProducts;
   const markets = Array.isArray(profile?.export_markets) ? profile.export_markets.map(String) : d.exportMarkets;
   const certifications = Array.isArray(profile?.certifications) ? profile.certifications.map(String) : d.certifications;
+  const supplierType = String(profile?.supplier_type ?? factory.supplierType ?? "manufacturer");
+  const evidenceType = String(profile?.supply_evidence_type ?? factory.supplyEvidenceType ?? "factory_evidence");
+  const manufacturer = supplierType === "manufacturer";
 
   const overviewStats = [
     { label: "Established", value: String(profile?.established_year ?? (factory.established || "Not disclosed")), verified: true },
     { label: "Employees", value: String(profile?.employee_range ?? factory.employees), verified: true },
-    { label: "Factory Size", value: String(profile?.factory_size ?? d.factorySize), verified: false },
+    { label: manufacturer ? "Factory Size" : "Operation Size", value: String(profile?.factory_size ?? d.factorySize), verified: false },
     { label: "Annual Revenue", value: String(profile?.annual_revenue_range ?? d.annualRevenue), verified: false },
-    { label: "Factory Type", value: String(profile?.factory_type ?? "Manufacturer"), verified: true },
+    { label: "Supplier Type", value: supplierTypeLabel(supplierType), verified: true },
     { label: "MOQ", value: String(profile?.moq ?? d.minOrder), verified: false },
   ];
 
@@ -1006,7 +1047,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
         </div>
       </div>
 
-      {/* Factory header */}
+      {/* Supplier header */}
       <div style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24 }}>
@@ -1030,9 +1071,10 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
                 <Mono color="#9CA3AF">{d.id}</Mono>
               </div>
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const }}>
+                <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 4, background: "#ECFDF5", border: "1px solid #6EE7B7", fontSize: 10, fontWeight: 600, color: "#047857" }}>{supplierTypeLabel(supplierType)}</span>
                 <VerifiedBadge label="Government Registration" />
                 <VerifiedBadge label="Business Contact" />
-                <VerifiedBadge label="Factory Evidence" />
+                <VerifiedBadge label={supplyEvidenceLabel(evidenceType)} />
                 <span style={{ display: "flex", alignItems: "center", gap: 5, marginLeft: 4 }}>
                   <Mono color="#9CA3AF">Last verified {factory.verifiedDate}</Mono>
                 </span>
@@ -1057,7 +1099,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
           {/* Overview */}
           <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, overflow: "hidden" }}>
             <div style={{ padding: "14px 22px", borderBottom: "1px solid #E9ECF1" }}>
-              <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#0D1117" }}>Factory Overview</h2>
+              <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#0D1117" }}>Supplier Overview</h2>
             </div>
             <div style={{ padding: "16px 22px" }}>
               {profileError && <p role="alert" style={{ color: "#B91C1C", fontSize: 12.5, marginBottom: 12 }}>{profileError}</p>}
@@ -1076,7 +1118,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
                 ))}
               </div>
               <p style={{ fontSize: 11.5, color: "#C4C9D4", marginTop: 10, lineHeight: 1.5 }}>
-                Fields marked REVIEWED are based on information provided by the factory and reviewed but not independently verified.
+                Fields marked REVIEWED are based on information provided by the supplier and reviewed but not independently verified.
               </p>
             </div>
           </div>
@@ -1107,7 +1149,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
                   </div>
                 ))}
                 <p style={{ fontSize: 11.5, color: "#C4C9D4", marginTop: 6, lineHeight: 1.5 }}>
-                  Export market information is mentioned by the factory and not independently verified.
+                  Export market information is mentioned by the supplier and not independently verified.
                 </p>
               </div>
             </div>
@@ -1149,7 +1191,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
               {[
                 { icon: GovIcon, label: "Government Registration", note: "Official registry check · SAMR database" },
                 { icon: PhoneIcon, label: "Business Contact", note: "Manual phone/email verification" },
-                { icon: FactoryIcon, label: "Factory Evidence", note: "Photo/video evidence reviewed" },
+                { icon: FactoryIcon, label: supplyEvidenceLabel(evidenceType), note: manufacturer ? "Factory photo/video evidence reviewed" : "Supplier-type evidence reviewed" },
               ].map(({ icon: Icon, label, note }, i) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 22px", borderBottom: i < 2 ? "1px solid #F5F6F8" : undefined }}>
                   <div style={{ width: 32, height: 32, borderRadius: 7, background: "#ECFDF5", border: "1px solid #A7F3D0", display: "flex", alignItems: "center", justifyContent: "center", color: "#10B981", flexShrink: 0 }}>
@@ -1184,7 +1226,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
           {/* Disclaimer */}
           <div style={{ padding: "14px 18px", borderRadius: 8, background: "#F7F8FA", border: "1px solid #E9ECF1" }}>
             <p style={{ fontSize: 12, color: "#9CA3AF", lineHeight: 1.65 }}>
-              FactoryRoster provides verified factory information for sourcing research only. We do not participate in transactions, payments, logistics, or buyer-supplier agreements.
+              FactoryRoster provides verified supplier information for sourcing research only. Verification does not guarantee product quality, delivery, pricing, or transaction outcomes.
             </p>
           </div>
         </div>
@@ -1241,7 +1283,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
           <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: "#0D1117", marginBottom: 6 }}>Need deeper verification?</p>
             <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.6, marginBottom: 14 }}>
-              Request additional factory photos, video walkthrough, or live verification support.
+              Request additional supplier evidence, contact checks, or live verification support.
             </p>
             <button onClick={() => router.push("/request-verification")} style={{ width: "100%", padding: "8px 0", borderRadius: 7, background: "transparent", border: "1px solid #D1D5DB", fontSize: 13, fontWeight: 600, color: "#374151", cursor: "pointer" }}>
               Request Verification
@@ -1332,11 +1374,11 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
                 Browse Verified Industries
               </h1>
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>
-                Explore the most searched China manufacturing categories. Every listed factory has passed FactoryRoster's verification process.
+                Explore the most searched China supply categories. Every listed supplier has passed FactoryRoster's verification process.
               </p>
             </div>
             <p style={{ fontSize: 12, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-              <VerifiedDot />All listed factories pass Government Registration, Business Contact, and Factory Evidence checks.
+              <VerifiedDot />All listed suppliers pass Government Registration, Business Contact, and Supply Evidence checks.
             </p>
           </div>
         </div>
@@ -1382,7 +1424,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px", color: "#0D1117", marginBottom: 3 }}>Popular Verified Industries</h2>
-            <p style={{ fontSize: 13, color: "#9CA3AF" }}>Start with the most searched China factory categories.</p>
+            <p style={{ fontSize: 13, color: "#9CA3AF" }}>Start with the most searched China supplier categories.</p>
           </div>
           <span style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 11, color: "#9CA3AF" }}>
             {filteredCards.length} {filteredCards.length === 1 ? "industry" : "industries"}
@@ -1454,10 +1496,10 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
         <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 12, padding: "40px 48px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, flexWrap: "wrap" as const }}>
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 6 }}>Can't find your product category?</h2>
-            <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.6 }}>Search by product name or request factory research.<br />FactoryRoster only lists factories after verification.</p>
+            <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.6 }}>Search by product name or request supplier research.<br />FactoryRoster only lists suppliers after verification.</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Factories</button>
+            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
             <button onClick={() => onNav?.("Request Verification")} style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Request Factory Research</button>
           </div>
         </div>
@@ -1468,7 +1510,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
         <div style={{ borderTop: "1px solid #E9ECF1", paddingTop: 28 }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#C4C9D4", marginBottom: 8 }}>Verified China Manufacturer Categories</p>
           <p style={{ fontSize: 12.5, color: "#C4C9D4", lineHeight: 1.75, maxWidth: 720 }}>
-            FactoryRoster organizes China factory records by industry, product category, and province. Published factory profiles are verified through government registration checks, business contact verification, and factory evidence review before being listed. FactoryRoster is not a marketplace and does not participate in buyer-supplier transactions.
+            FactoryRoster organizes China supplier records by industry, product category, province, supplier type, MOQ fit, and supply model. Published supplier profiles pass Government Registration, Business Contact, and supplier-type Supply Evidence checks before being listed. FactoryRoster is not a marketplace and does not participate in buyer-supplier transactions.
           </p>
         </div>
       </section>
@@ -1481,12 +1523,12 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
 // ─── Verification Page ─────────────────────────────────────────────────────────
 
 const FAQ_ITEMS = [
-  { q: "Are all factories on FactoryRoster verified?", a: "Yes. Only factory profiles that have passed FactoryRoster's required verification checks are published in search results." },
-  { q: "Does FactoryRoster participate in transactions?", a: "No. FactoryRoster provides verified factory information and contact intelligence only. Buyers and factories manage their own transactions independently." },
-  { q: "What does Business Contact Verified mean?", a: "It means FactoryRoster has manually checked the business contact information — phone, email, and contact person — before the factory profile was listed." },
-  { q: "What does Factory Evidence mean?", a: "It means photos or video evidence of the factory or facility were reviewed before publication. It does not verify production capacity or product quality." },
-  { q: "Does FactoryRoster guarantee supplier quality?", a: "No. Verification confirms identity, contactability, and factory evidence. Buyers should still conduct product, compliance, sample, and contract due diligence independently." },
-  { q: "Can I request updated verification?", a: "Yes. Buyers can request additional verification support such as updated contact checks, additional photos, or video walkthroughs through FactoryRoster's verification service." },
+  { q: "Are all suppliers on FactoryRoster verified?", a: "Yes. Only supplier profiles that have passed FactoryRoster's required verification checks are published in search results." },
+  { q: "Does FactoryRoster participate in transactions?", a: "No. FactoryRoster provides verified supplier information and contact intelligence only. Buyers and suppliers manage their own transactions independently." },
+  { q: "What does Business Contact Verified mean?", a: "It means FactoryRoster manually checked the business contact information before the supplier profile was listed." },
+  { q: "What does Supply Evidence mean?", a: "It means evidence appropriate to the supplier type was reviewed before publication. Manufacturers require factory evidence; other suppliers require authorization, relationship, supply-chain, export, inventory, fulfillment, or service evidence." },
+  { q: "Does FactoryRoster guarantee supplier quality?", a: "No. Verification confirms specific identity, contact, and supply evidence only. Buyers must still conduct product, compliance, sample, contract, payment, and delivery due diligence." },
+  { q: "Can I request updated verification?", a: "Yes. Buyers can request updated contact checks or additional supplier evidence through FactoryRoster's verification service." },
 ];
 
 function FAQItem({ q, a }: { q: string; a: string }) {
@@ -1521,19 +1563,19 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
     },
     {
       icon: PhoneIcon, label: "Business Contact",
-      desc: "We manually verify that the factory can be contacted through real business channels.",
+      desc: "We manually verify that the supplier can be contacted through real business channels.",
       items: ["Business phone", "Business email", "Contact person", "Position where available", "Contact availability"],
       method: "Manual phone or email verification",
       output: "Business Contact Verified",
       buyerBenefit: "Reduces wasted outreach to invalid or unreachable contacts.",
     },
     {
-      icon: FactoryIcon, label: "Factory Evidence",
-      desc: "We review factory photos or video evidence before the factory profile is published.",
-      items: ["Factory exterior", "Company signage", "Workshop", "Production area", "Warehouse or office evidence"],
-      method: "Photo or video evidence review",
-      output: "Factory Evidence Verified",
-      buyerBenefit: "Helps separate real factory evidence from weak directory listings.",
+      icon: FactoryIcon, label: "Supply Evidence",
+      desc: "We review evidence appropriate to the supplier's declared type before publication.",
+      items: ["Factory evidence for manufacturers", "Authorization or supplier relationship", "Supply chain or export evidence", "Inventory or fulfillment evidence", "Service capability evidence"],
+      method: "Supplier-type evidence review",
+      output: "Supply Evidence Verified",
+      buyerBenefit: "Helps distinguish the supplier's actual role and supply capability.",
     },
   ];
 
@@ -1550,10 +1592,10 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
             Verified Before Listed
           </h1>
           <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 28px" }}>
-            Every factory profile must pass three checks before it appears in FactoryRoster search results.
+            Every supplier profile must pass verification before it appears in FactoryRoster search results.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Verified Factories</button>
+            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Verified Suppliers</button>
             <button onClick={onPricing} style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>See Contact Pricing</button>
           </div>
         </div>
@@ -1564,7 +1606,7 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
             {[
               { icon: GovIcon, label: "Government\nRegistration" },
               { icon: PhoneIcon, label: "Business\nContact" },
-              { icon: FactoryIcon, label: "Factory\nEvidence" },
+              { icon: FactoryIcon, label: "Supply\nEvidence" },
             ].map(({ icon: Icon, label }) => (
               <div key={label} style={{ display: "flex", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 9, width: 116 }}>
@@ -1591,7 +1633,7 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
 
       {/* Three checks */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 32px 48px" }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 28 }}>The Three Checks Every Factory Must Pass</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 28 }}>The Three Checks Every Supplier Must Pass</h2>
         <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "#E9ECF1", borderRadius: 12, overflow: "hidden" }}>
           {checks.map(({ icon: Icon, label, desc, items, method, output, buyerBenefit }, i) => (
             <div key={label} style={{ background: "#fff", padding: "28px 26px" }}>
@@ -1656,14 +1698,14 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
               {
                 area: "Business Contact",
                 check: "Business phone, email, and contact person",
-                proves: "The factory can be contacted through real business channels",
+                proves: "The supplier can be contacted through real business channels",
                 benefit: "Reduces wasted outreach",
               },
               {
-                area: "Factory Evidence",
-                check: "Factory photos or video evidence",
-                proves: "There is physical factory evidence on file",
-                benefit: "Helps buyers avoid weak or unverified listings",
+                area: "Supply Evidence",
+                check: "Evidence matched to the supplier type",
+                proves: "The declared supply role has supporting evidence",
+                benefit: "Helps buyers compare manufacturers and non-manufacturing suppliers accurately",
               },
             ].map((row, i) => (
               <div key={row.area} style={{ minWidth: 560, display: "grid", gridTemplateColumns: "1.1fr 1.4fr 1.5fr 1.4fr", padding: "15px 20px", borderBottom: i < 2 ? "1px solid #F0F1F3" : undefined, gap: 16, alignItems: "flex-start" }}>
@@ -1683,7 +1725,7 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 10 }}>What Verification Does Not Mean</h2>
             <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7 }}>
-              FactoryRoster verifies identity, contactability, and factory evidence before listing a profile. We do not guarantee product quality, delivery, pricing, compliance, or transaction outcomes. Buyers should still conduct product samples, contracts, inspections, and payment due diligence.
+              FactoryRoster verifies identity, contactability, and supplier-type supply evidence before listing a profile. We do not guarantee product quality, delivery, pricing, compliance, or transaction outcomes. Buyers should still conduct product samples, contracts, inspections, and payment due diligence.
             </p>
             <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginTop: 12 }}>
               FactoryRoster is not a marketplace and does not participate in buyer-supplier transactions.
@@ -1723,8 +1765,8 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
           <div className="r2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "flex-start" }}>
 
             <div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 8 }}>Verification Status on Factory Profiles</h2>
-              <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 22 }}>Every public factory profile shows the completed verification checks, last verification date, and contact unlock status.</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 8 }}>Verification Status on Supplier Profiles</h2>
+              <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 22 }}>Every public supplier profile shows its supplier type, completed verification checks, last verification date, and contact unlock status.</p>
               <div style={{ background: "#F7F8FA", border: "1px solid #E9ECF1", borderRadius: 10, padding: "20px 22px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: "#F0F4FF", border: "1px solid #DBEAFE", display: "flex", alignItems: "center", justifyContent: "center", color: "#1E40AF" }}>
@@ -1750,7 +1792,7 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
 
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 8 }}>Contact Intelligence</h2>
-              <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 22 }}>FactoryRoster contact records may include verified phone, verified email, contact person, position, WhatsApp or WeChat when available, verification method, and last verified date.</p>
+              <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 22 }}>FactoryRoster supplier contact records may include verified phone, verified email, contact person, position, WhatsApp or WeChat when available, verification method, and last verified date.</p>
               <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, overflow: "hidden" }}>
                 <div style={{ padding: "13px 20px", borderBottom: "1px solid #E9ECF1", background: "#FAFBFC", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 6, background: "#F0F4FF", border: "1px solid #DBEAFE", color: "#1E40AF" }}><ShieldIcon /></span>
@@ -1768,7 +1810,7 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
                   </div>
                 </div>
                 <div style={{ padding: "12px 20px 16px", borderTop: "1px solid #E9ECF1" }}>
-                  <button onClick={() => onSearch("")} style={{ width: "100%", padding: "9px 0", borderRadius: 7, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Find a factory to unlock</button>
+                  <button onClick={() => onSearch("")} style={{ width: "100%", padding: "9px 0", borderRadius: 7, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Find a supplier to unlock</button>
                 </div>
               </div>
             </div>
@@ -1780,13 +1822,13 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px" }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, gap: 16, flexWrap: "wrap" as const }}>
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 6 }}>Need Deeper Factory Verification?</h2>
-            <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>For buyers who need additional confidence, FactoryRoster can support updated contact checks, factory photos, video walkthroughs, or live verification support.</p>
+            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 6 }}>Need Deeper Supplier Verification?</h2>
+            <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>For buyers who need additional confidence, FactoryRoster can support updated contact checks and supplier-type evidence review.</p>
           </div>
         </div>
         <div className="r4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 22 }}>
           {[
-            { icon: CheckIcon, label: "Updated Contact Check", desc: "Re-verify business contact details for a specific factory." },
+            { icon: CheckIcon, label: "Updated Contact Check", desc: "Re-verify business contact details for a specific supplier." },
             { icon: FactoryIcon, label: "Factory Photos", desc: "Request updated exterior and interior factory photos." },
             { icon: PhoneIcon, label: "Video Walkthrough", desc: "Request a factory video walkthrough for deeper review." },
             { icon: GovIcon, label: "Live Verification Support", desc: "Request live verification support for key supplier candidates." },
@@ -1818,10 +1860,10 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
 
       {/* Bottom CTA */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 32px", textAlign: "center" }}>
-        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", marginBottom: 10 }}>Start with verified factory records</h2>
-        <p style={{ fontSize: 14.5, color: "#6B7280", marginBottom: 26 }}>Search by product, industry, or category to find verified China manufacturers.</p>
+        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", marginBottom: 10 }}>Start with verified supplier records</h2>
+        <p style={{ fontSize: 14.5, color: "#6B7280", marginBottom: 26 }}>Search manufacturers, distributors, exporters, wholesalers, and other verified China suppliers.</p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Verified Factories</button>
+          <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Verified Suppliers</button>
           <button onClick={onIndustries} style={{ padding: "10px 22px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Browse Industries</button>
         </div>
       </section>
@@ -1834,19 +1876,19 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
 // ─── Pricing Page ─────────────────────────────────────────────────────────────
 
 const PRICING_FAQ = [
-  { q: "What is a contact credit?", a: "A contact credit unlocks one verified factory contact record, including available phone, email, contact person, and verification details." },
-  { q: "What does \"verified contact\" mean?", a: "It means FactoryRoster manually checked the business contact information before the factory record was listed." },
-  { q: "Does FactoryRoster guarantee supplier quality?", a: "No. FactoryRoster verifies identity, contactability, and factory evidence. Buyers should still conduct samples, contracts, inspections, and payment due diligence." },
+  { q: "What is a contact credit?", a: "A contact credit unlocks one verified supplier contact record, including available phone, email, contact person, and verification details." },
+  { q: "What does \"verified contact\" mean?", a: "It means FactoryRoster manually checked the business contact information before the supplier record was listed." },
+  { q: "Does FactoryRoster guarantee supplier quality?", a: "No. FactoryRoster verifies specific identity, contactability, and supply evidence only. Buyers must still conduct their own due diligence." },
   { q: "Can I request updated verification?", a: "Yes. Buyers can request updated contact checks, photos, video walkthroughs, or live verification support." },
-  { q: "Is FactoryRoster a marketplace?", a: "No. FactoryRoster provides verified factory intelligence and contact information only. We do not participate in transactions." },
+  { q: "Is FactoryRoster a marketplace?", a: "No. FactoryRoster provides verified supplier intelligence and contact information only. We do not participate in transactions." },
 ];
 
 const COMPARISON_ROWS = [
-  { label: "Search verified factory records",   free: true,  credits: true,  member: true,  verify: true  },
-  { label: "View factory overview",             free: true,  credits: true,  member: true,  verify: true  },
+  { label: "Search verified supplier records",  free: true,  credits: true,  member: true,  verify: true  },
+  { label: "View supplier overview",            free: true,  credits: true,  member: true,  verify: true  },
   { label: "View verification status",          free: true,  credits: true,  member: true,  verify: true  },
   { label: "Unlock verified contacts",          free: false, credits: true,  member: true,  verify: false },
-  { label: "Save factory shortlist",            free: false, credits: false, member: true,  verify: false },
+  { label: "Save supplier shortlist",           free: false, credits: false, member: true,  verify: false },
   { label: "Request updated contact check",     free: false, credits: false, member: true,  verify: true  },
   { label: "Request factory photos / video",    free: false, credits: false, member: false, verify: true  },
   { label: "Priority support",                  free: false, credits: false, member: true,  verify: true  },
@@ -1865,19 +1907,19 @@ function CheckCell({ yes }: { yes: boolean }) {
 function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) => void; onIndustries: () => void; onNav?: (k: string) => void }) {
   const plans = [
     {
-      name: "Starter", price: "$9.90", desc: "For testing a few factory contacts.", note: "Best for first-time buyers",
+      name: "Starter", price: "$9.90", desc: "For testing a few supplier contacts.", note: "Best for first-time buyers",
       credits: 3, popular: false,
-      features: ["3 verified factory contacts", "Verified phone", "Verified email", "Contact person where available", "Last verification date", "Verification method"],
+      features: ["3 verified supplier contacts", "Verified phone", "Verified email", "Contact person where available", "Last verification date", "Verification method"],
     },
     {
       name: "Business", price: "$29.90", desc: "For building a small supplier shortlist.", note: "",
       credits: 15, popular: true,
-      features: ["15 verified factory contacts", "Verified phone", "Verified email", "Contact person where available", "WhatsApp / WeChat if verified", "Last verification date", "Verification method"],
+      features: ["15 verified supplier contacts", "Verified phone", "Verified email", "Contact person where available", "WhatsApp / WeChat if verified", "Last verification date", "Verification method"],
     },
     {
-      name: "Pro", price: "$99", desc: "For sourcing teams comparing multiple factories.", note: "",
+      name: "Pro", price: "$99", desc: "For sourcing teams comparing multiple suppliers.", note: "",
       credits: 60, popular: false,
-      features: ["60 verified factory contacts", "Verified phone", "Verified email", "Contact person where available", "WhatsApp / WeChat if verified", "Last verification date", "Verification method", "Shortlist workflow ready"],
+      features: ["60 verified supplier contacts", "Verified phone", "Verified email", "Contact person where available", "WhatsApp / WeChat if verified", "Last verification date", "Verification method", "Shortlist workflow ready"],
     },
   ];
 
@@ -1888,12 +1930,12 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
       <section style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
         <div style={{ maxWidth: 760, margin: "0 auto", padding: "52px 32px 48px", textAlign: "center" }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 14 }}>Pricing</p>
-          <h1 style={{ fontSize: "clamp(30px,4vw,44px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.1, color: "#0D1117", marginBottom: 14 }}>Unlock Verified Factory Contacts</h1>
+          <h1 style={{ fontSize: "clamp(30px,4vw,44px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.1, color: "#0D1117", marginBottom: 14 }}>Unlock Verified Supplier Contacts</h1>
           <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 28px" }}>
-            Search verified factory records for free. Unlock verified phone, email, contact person, and verification details when you are ready to reach out.
+            Search verified supplier records for free. Unlock verified phone, email, contact person, and verification details when you are ready to reach out.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 24 }}>
-            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Factories</button>
+            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
             <a href="#compare" style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", textDecoration: "none" }}>Compare Plans</a>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20 }}>
@@ -1910,7 +1952,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
       <section id="credits" className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 32px 48px" }}>
         <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 6 }}>Contact Credits</h2>
-          <p style={{ fontSize: 13.5, color: "#6B7280" }}>Use credits to unlock verified contact records one factory at a time.</p>
+          <p style={{ fontSize: 13.5, color: "#6B7280" }}>Use credits to unlock verified contact records one supplier at a time.</p>
           <p role="status" style={{ marginTop: 10, display: "inline-flex", padding: "7px 10px", borderRadius: 7, background: "#FFFBEB", border: "1px solid #FDE68A", color: "#92400E", fontSize: 12 }}>Purchases are temporarily unavailable while payment setup is being completed.</p>
         </div>
         <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 16 }}>
@@ -1943,7 +1985,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
             </div>
           ))}
         </div>
-        <p style={{ fontSize: 12, color: "#9CA3AF" }}>Contact fields vary by factory record. Each unlocked record clearly shows what has been verified.</p>
+        <p style={{ fontSize: 12, color: "#9CA3AF" }}>Contact fields vary by supplier record. Each unlocked record clearly shows what has been verified.</p>
       </section>
 
       {/* What's Included */}
@@ -1960,7 +2002,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
                 ["WhatsApp / WeChat", "If available and verified"],
                 ["Verification method", "How the contact was verified"],
                 ["Last contact verification date", "When contact was last checked"],
-                ["FactoryRoster record ID", "Unique factory record reference"],
+                ["FactoryRoster record ID", "Unique supplier record reference"],
               ].map(([label, desc]) => (
                 <div key={label} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #F5F6F8", gap: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
@@ -2001,7 +2043,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px" }}>
         <div style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 6 }}>Sourcing Membership</h2>
-          <p style={{ fontSize: 13.5, color: "#6B7280" }}>For buyers who need ongoing verified contacts and deeper factory verification support.</p>
+          <p style={{ fontSize: 13.5, color: "#6B7280" }}>For buyers who need ongoing verified contacts and deeper supplier verification support.</p>
         </div>
         <div className="r-member" style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 12, padding: "28px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, flexWrap: "wrap" as const }}>
           <div style={{ flex: 1, minWidth: 220 }}>
@@ -2088,7 +2130,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
           <div className="r2" style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 32, alignItems: "flex-start" }}>
             <div>
               <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px", color: "#0D1117", marginBottom: 8 }}>What FactoryRoster Does Not Do</h2>
-              <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7 }}>FactoryRoster provides verified factory information for sourcing research only. We do not participate in transactions, payments, logistics, contracts, product quality control, or buyer-supplier agreements.</p>
+              <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7 }}>FactoryRoster provides verified supplier information for sourcing research only. We do not participate in transactions, payments, logistics, contracts, product quality control, or buyer-supplier agreements.</p>
             </div>
             <div className="r2" style={{ background: "#F7F8FA", border: "1px solid #E9ECF1", borderRadius: 10, padding: "20px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px" }}>
               {["We do not guarantee product quality", "We do not guarantee pricing", "We do not guarantee delivery", "We do not process buyer-supplier payments", "We are not a marketplace", "Buyers should conduct product, contract, inspection, and payment due diligence"].map((item) => (
@@ -2113,10 +2155,10 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
       {/* Bottom CTA */}
       <section style={{ background: "#fff", borderTop: "1px solid #E9ECF1" }}>
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 32px", textAlign: "center" }}>
-          <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.6px", color: "#0D1117", marginBottom: 10 }}>Start with verified factory records</h2>
+          <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.6px", color: "#0D1117", marginBottom: 10 }}>Start with verified supplier records</h2>
           <p style={{ fontSize: 14.5, color: "#6B7280", marginBottom: 26 }}>Search by product or industry, then unlock verified contacts when you are ready to reach out.</p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Factories</button>
+            <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
             <button onClick={onIndustries} style={{ padding: "10px 22px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Browse Industries</button>
           </div>
         </div>
@@ -2171,8 +2213,8 @@ const FEATURED_GUIDES = [
   },
   {
     topic: "Factory Verification",  title: "How Factory Verification Works",
-    summary: "Understand Government Registration, Business Contact, and Factory Evidence checks before contacting suppliers.",
-    learn: "Understand Government Registration, Business Contact, and Factory Evidence checks.",  read: "5 min",
+    summary: "Understand Government Registration, Business Contact, and Supply Evidence checks before contacting suppliers.",
+    learn: "Understand Government Registration, Business Contact, and supplier-type Supply Evidence checks.",  read: "5 min",
   },
   {
     topic: "Contact Intelligence",  title: "How to Use Verified Factory Contacts",
@@ -2216,9 +2258,9 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 32, flexWrap: "wrap" as const, marginBottom: 20 }}>
             <div>
               <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 10 }}>Sourcing Guides</p>
-              <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-1px", lineHeight: 1.1, color: "#0D1117", marginBottom: 8 }}>China Factory Sourcing Guides</h1>
+              <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-1px", lineHeight: 1.1, color: "#0D1117", marginBottom: 8 }}>China Supplier Sourcing Guides</h1>
               <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>
-                Practical guides for overseas buyers researching verified China manufacturers, factory contacts, verification steps, and supplier due diligence.
+                Practical guides for overseas buyers researching verified China suppliers, contact intelligence, verification steps, and supplier due diligence.
               </p>
             </div>
             {/* Trust chips */}
@@ -2237,7 +2279,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
               onBlurCapture={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLDivElement).style.background = "#F7F8FA"; }}>
               <span style={{ color: "#9CA3AF", flexShrink: 0 }}><SearchIcon size={14} /></span>
               <input value={searchVal} onChange={(e) => setSearchVal(e.target.value)}
-                placeholder="Search guides, sourcing topics, or factory categories"
+                placeholder="Search guides, sourcing topics, or supplier categories"
                 style={{ flex: 1, fontSize: 13.5, color: "#0D1117", background: "transparent", border: "none", outline: "none", fontFamily: "inherit" }} />
             </div>
             <button style={{ height: 38, padding: "0 18px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", flexShrink: 0 }}>Search Guides</button>
@@ -2412,17 +2454,17 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
           <span style={{ color: "#D1D5DB", flexShrink: 0, marginTop: 1 }}><ShieldIcon /></span>
           <p style={{ fontSize: 12.5, color: "#9CA3AF", lineHeight: 1.7 }}>
             <strong style={{ color: "#6B7280", fontWeight: 600 }}>Buyer due diligence notice: </strong>
-            FactoryRoster verifies identity, contactability, and factory evidence before listing a profile. Buyers should still conduct product samples, contract checks, compliance review, and payment due diligence before placing orders.
+            FactoryRoster verifies identity, contactability, and supplier-type supply evidence before listing a profile. Buyers should still conduct product samples, contract checks, compliance review, and payment due diligence before placing orders.
           </p>
         </div>
       </section>
 
       {/* Bottom CTA */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "52px 32px", textAlign: "center" }}>
-        <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.6px", color: "#0D1117", marginBottom: 10 }}>Ready to search verified factory records?</h2>
+        <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.6px", color: "#0D1117", marginBottom: 10 }}>Ready to search verified supplier records?</h2>
         <p style={{ fontSize: 14.5, color: "#6B7280", marginBottom: 24 }}>Search by product, industry, or category to find verified China manufacturers.</p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Factories</button>
+          <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
           <button onClick={onIndustries} style={{ padding: "10px 22px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Browse Industries</button>
         </div>
       </section>
@@ -2469,7 +2511,7 @@ function SignInPage({ onSignUp, onHome, onNav }: { onSignUp: () => void; onHome:
         {/* Card */}
         <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 14, padding: "36px 36px 28px", boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 8px 24px rgba(0,0,0,0.04)" }}>
           <h1 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px", color: "#0D1117", marginBottom: 6, textAlign: "center" }}>Sign in to FactoryRoster</h1>
-          <p style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", marginBottom: 28, lineHeight: 1.5 }}>Access your saved factories, unlocked contacts, and verification requests.</p>
+          <p style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", marginBottom: 28, lineHeight: 1.5 }}>Access your saved suppliers, unlocked contacts, and verification requests.</p>
 
           {/* OAuth */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
@@ -2515,7 +2557,7 @@ function SignInPage({ onSignUp, onHome, onNav }: { onSignUp: () => void; onHome:
 
         {/* Trust note */}
         <p style={{ textAlign: "center", fontSize: 12, color: "#C4C9D4", marginTop: 20, lineHeight: 1.6 }}>
-          Only verified factory records are listed on FactoryRoster.
+          Only verified supplier records are listed on FactoryRoster.
         </p>
 
         {/* Footer links */}
@@ -2587,10 +2629,10 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
       <div style={{ display: "none", flex: 1, background: "#fff", borderRight: "1px solid #E9ECF1", padding: "64px 56px", flexDirection: "column", justifyContent: "center", minWidth: 380, maxWidth: 480 }}
         className="signup-left">
         <div style={{ marginBottom: 32 }}><LogoWordmark size={28} /></div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", lineHeight: 1.2, marginBottom: 12 }}>Get started with verified China factory records</h1>
-        <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 32 }}>Search factories for free. Create an account to save factory profiles, unlock verified contacts, and manage verification requests.</p>
+        <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", lineHeight: 1.2, marginBottom: 12 }}>Get started with verified China supplier records</h1>
+        <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 32 }}>Search suppliers for free. Create an account to save supplier profiles, unlock verified contacts, and manage verification requests.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {["Save factory profiles", "Unlock verified contact records", "Track contact credits", "Request updated verification", "Build supplier shortlists"].map((b) => (
+          {["Save supplier profiles", "Unlock verified contact records", "Track contact credits", "Request updated verification", "Build supplier shortlists"].map((b) => (
             <div key={b} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", background: "#ECFDF5", border: "1px solid #6EE7B7", color: "#10B981", flexShrink: 0 }}><CheckIcon size={9} /></span>
               <span style={{ fontSize: 13.5, color: "#374151" }}>{b}</span>
@@ -2606,7 +2648,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
           </div>
           <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 14, padding: "32px 32px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 8px 24px rgba(0,0,0,0.04)" }}>
             <h2 style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 4, textAlign: "center" }}>Create your account</h2>
-            <p style={{ fontSize: 12.5, color: "#9CA3AF", textAlign: "center", marginBottom: 24 }}>Free to start. Search verified factories immediately.</p>
+            <p style={{ fontSize: 12.5, color: "#9CA3AF", textAlign: "center", marginBottom: 24 }}>Free to start. Search verified suppliers immediately.</p>
 
             <button disabled aria-disabled="true" style={{ width: "100%", padding: "9px 0", borderRadius: 8, background: "#F7F8FA", border: "1px solid #E9ECF1", fontSize: 13.5, fontWeight: 500, color: "#9CA3AF", cursor: "not-allowed", marginBottom: 16 }}>Google sign-up coming soon</button>
 
@@ -2651,7 +2693,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
             </p>
           </div>
           <p style={{ textAlign: "center", fontSize: 11.5, color: "#C4C9D4", marginTop: 16, lineHeight: 1.6 }}>
-            FactoryRoster provides verified factory information only and does not participate in transactions.
+            FactoryRoster provides verified supplier information only and does not participate in transactions.
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
             {[["Privacy", "Privacy"], ["Terms", "Terms"], ["Contact", "Contact"]].map(([label, nav]) => (
@@ -2705,7 +2747,7 @@ function ContactPage({ onNav }: { onNav: (k: string) => void }) {
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 32px 40px" }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 10 }}>Contact</p>
           <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-1px", color: "#0D1117", marginBottom: 8 }}>Contact FactoryRoster</h1>
-          <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>Questions about verified factory records, contact credits, supplier corrections, or verification requests? Send us a message.</p>
+          <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>Questions about verified supplier records, contact credits, supplier corrections, or verification requests? Send us a message.</p>
         </div>
       </section>
 
@@ -2713,7 +2755,7 @@ function ContactPage({ onNav }: { onNav: (k: string) => void }) {
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 32px 32px" }}>
         <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 40 }}>
           {[
-            { title: "For Buyers", desc: "Questions about factory records, contact credits, or verification requests.", cta: "Buyer Inquiry", type: "Buyer question" },
+            { title: "For Buyers", desc: "Questions about supplier records, contact credits, or verification requests.", cta: "Buyer Inquiry", type: "Buyer question" },
             { title: "For Suppliers", desc: "Request a correction, claim a profile, or update company information.", cta: "Claim or Update Profile", type: "Supplier correction" },
             { title: "Verification Requests", desc: "Request updated contact checks, factory photos, or video verification support.", cta: "Request Verification", type: "Verification request" },
           ].map(({ title, desc, cta, type }) => (
@@ -2775,7 +2817,7 @@ function ContactPage({ onNav }: { onNav: (k: string) => void }) {
           <aside>
             <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, padding: "20px 22px", marginBottom: 12 }}>
               <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 12 }}>What FactoryRoster does</p>
-              {["Verified factory records", "Verified contact intelligence", "Factory verification support"].map((b) => (
+              {["Verified supplier records", "Verified contact intelligence", "Supplier verification support"].map((b) => (
                 <div key={b} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <span style={{ color: "#10B981", flexShrink: 0 }}><CheckIcon size={11} /></span>
                   <span style={{ fontSize: 13, color: "#374151" }}>{b}</span>
@@ -2862,8 +2904,8 @@ function RequestVerificationPage({ onPricing, onNav }: { onPricing: () => void; 
       <section style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "48px 32px 40px" }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 10 }}>Verification Request</p>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-1px", color: "#0D1117", marginBottom: 8 }}>Request Deeper Factory Verification</h1>
-          <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 560, marginBottom: 22 }}>Need more confidence before contacting or shortlisting a factory? Request updated contact checks, factory photos, video evidence, or live verification support.</p>
+          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-1px", color: "#0D1117", marginBottom: 8 }}>Request Deeper Supplier Verification</h1>
+          <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 560, marginBottom: 22 }}>Need more confidence before contacting or shortlisting a supplier? Request updated contact checks or evidence appropriate to the supplier type.</p>
           <div style={{ display: "flex", gap: 10 }}>
             <a href="#request-form" style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, textDecoration: "none" }}>Submit Verification Request</a>
             <button onClick={onPricing} style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>See Pricing</button>
@@ -2901,7 +2943,7 @@ function RequestVerificationPage({ onPricing, onNav }: { onPricing: () => void; 
             <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 12, padding: "56px 40px", textAlign: "center" }}>
               <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", background: "#ECFDF5", border: "1px solid #6EE7B7", color: "#10B981", marginBottom: 20 }}><CheckIcon size={20} /></span>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0D1117", marginBottom: 8 }}>Request submitted</h2>
-              <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>We'll review the details and confirm the verification scope available for this factory.</p>
+              <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7 }}>We'll review the details and confirm the verification scope available for this supplier.</p>
             </div>
           ) : (
             <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 12, padding: "28px 32px" }}>
@@ -2909,11 +2951,11 @@ function RequestVerificationPage({ onPricing, onNav }: { onPricing: () => void; 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div className="r2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div>
-                    <FieldLabel>Factory name</FieldLabel>
+                    <FieldLabel>Supplier name</FieldLabel>
                     <input value={form.factoryName} onChange={set("factoryName")} placeholder="e.g. Shenzhen Luminos Technology" style={inputStyle} onFocus={focusBlue} onBlur={blurGray} />
                   </div>
                   <div>
-                    <FieldLabel>Factory profile URL (optional)</FieldLabel>
+                    <FieldLabel>Supplier profile URL (optional)</FieldLabel>
                     <input value={form.factoryUrl} onChange={set("factoryUrl")} placeholder="factoryroster.com/..." style={inputStyle} onFocus={focusBlue} onBlur={blurGray} />
                   </div>
                 </div>
@@ -2924,7 +2966,7 @@ function RequestVerificationPage({ onPricing, onNav }: { onPricing: () => void; 
                 <div>
                   <FieldLabel>What do you want to verify?</FieldLabel>
                   <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap" as const, gap: 7 }}>
-                    {["Contact details", "Factory photos", "Factory video", "Business registration", "Production capability", "Other"].map((t) => {
+                    {["Contact details", "Supply evidence", "Authorization evidence", "Factory photos", "Export evidence", "Business registration", "Other"].map((t) => {
                       const active = form.verifyTypes.includes(t);
                       return (
                         <button key={t} onClick={() => toggleVerifyType(t)}
@@ -3004,8 +3046,8 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
       <section style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
         <div style={{ maxWidth: 860, margin: "0 auto", padding: "60px 32px 56px", textAlign: "center" }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 14 }}>About FactoryRoster</p>
-          <h1 style={{ fontSize: "clamp(32px,4.5vw,50px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.1, color: "#0D1117", marginBottom: 16 }}>Verified China Factory Intelligence</h1>
-          <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 520, margin: "0 auto" }}>FactoryRoster helps global buyers search verified China factory records and contact intelligence — without acting as a marketplace.</p>
+          <h1 style={{ fontSize: "clamp(32px,4.5vw,50px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.1, color: "#0D1117", marginBottom: 16 }}>Verified China Supplier Intelligence</h1>
+          <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 520, margin: "0 auto" }}>FactoryRoster helps global buyers search verified China supplier records and contact intelligence — without acting as a marketplace.</p>
         </div>
       </section>
 
@@ -3014,10 +3056,10 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
         <div className="r2" style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 56, alignItems: "flex-start" }}>
           <div>
             <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 12 }}>Why FactoryRoster exists</p>
-            <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: "#0D1117", marginBottom: 14, lineHeight: 1.3 }}>Built for structured, transparent factory research</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: "#0D1117", marginBottom: 14, lineHeight: 1.3 }}>Built for structured, transparent supplier research</h2>
           </div>
           <p style={{ fontSize: 14.5, color: "#6B7280", lineHeight: 1.8, paddingTop: 36 }}>
-            Many buyers waste time with outdated supplier listings, unreachable contacts, and unverified factory claims. FactoryRoster is built to make factory research more structured, transparent, and contactable — by verifying each published record before it appears in search results.
+            Many buyers waste time with outdated listings, unreachable contacts, and unclear supplier roles. FactoryRoster makes supplier research more structured and transparent by verifying each published record before it appears in search results.
           </p>
         </div>
       </section>
@@ -3028,13 +3070,13 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
           <div style={{ marginBottom: 36 }}>
             <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#10B981", marginBottom: 8 }}>Our Principle</p>
             <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", marginBottom: 8 }}>Verified Before Listed</h2>
-            <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>Every published factory profile must pass our verification process before appearing in search results.</p>
+            <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 520 }}>Every published supplier profile must pass our verification process before appearing in search results.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "#E9ECF1", borderRadius: 12, overflow: "hidden" }}>
             {[
               { icon: GovIcon, label: "Government Registration", desc: "Company legal registration confirmed against official Chinese government records.", num: "01" },
               { icon: PhoneIcon, label: "Business Contact", desc: "Business phone, email, and contact person manually verified before publication.", num: "02" },
-              { icon: FactoryIcon, label: "Factory Evidence", desc: "Factory photos or video evidence reviewed and confirmed on file.", num: "03" },
+              { icon: FactoryIcon, label: "Supply Evidence", desc: "Evidence matched to the supplier type is reviewed and recorded.", num: "03" },
             ].map(({ icon: Icon, label, desc, num }) => (
               <div key={label} style={{ background: "#fff", padding: "28px 26px" }}>
                 <Mono color="#E5E7EB">{num}</Mono>
@@ -3054,10 +3096,10 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
         <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 24 }}>What FactoryRoster Provides</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
           {[
-            { icon: GovIcon, label: "Verified factory records", desc: "Factory profiles verified before being published in search results." },
+            { icon: GovIcon, label: "Verified supplier records", desc: "Supplier profiles verified before being published in search results." },
             { icon: PhoneIcon, label: "Verified contact intelligence", desc: "Unlockable verified phone, email, and contact person records." },
-            { icon: FactoryIcon, label: "Factory verification support", desc: "Updated contact checks, photos, video walkthroughs, and live support." },
-            { icon: SearchIcon, label: "Sourcing research tools", desc: "Search, filter, and shortlist verified China factories by industry and province." },
+            { icon: FactoryIcon, label: "Supplier verification support", desc: "Updated contact checks and supplier-type evidence review." },
+            { icon: SearchIcon, label: "Sourcing research tools", desc: "Search, filter, and shortlist verified China suppliers by type, supply model, MOQ fit, industry, and province." },
           ].map(({ icon: Icon, label, desc }) => (
             <div key={label} style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, padding: "20px 20px" }}>
               <div style={{ width: 34, height: 34, borderRadius: 8, background: "#F0F4FF", border: "1px solid #DBEAFE", display: "flex", alignItems: "center", justifyContent: "center", color: "#1E40AF", marginBottom: 12 }}>
@@ -3080,7 +3122,7 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
               <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7 }}>FactoryRoster is not a marketplace and does not participate in buyer-supplier transactions.</p>
             </div>
             <div className="r2" style={{ background: "#F7F8FA", border: "1px solid #E9ECF1", borderRadius: 10, padding: "22px 26px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px" }}>
-              {["We do not process payments", "We do not handle logistics", "We do not guarantee product quality", "We do not represent factories or buyers in transactions"].map((item) => (
+              {["We do not process payments", "We do not handle logistics", "We do not guarantee product quality", "We do not represent suppliers or buyers in transactions"].map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                   <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#9CA3AF", flexShrink: 0, marginTop: 6 }} />
                   <span style={{ fontSize: 12.5, color: "#374151" }}>{item}</span>
@@ -3093,10 +3135,10 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
 
       {/* CTA */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 32px", textAlign: "center" }}>
-        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", marginBottom: 10 }}>Start with verified factory records</h2>
+        <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.8px", color: "#0D1117", marginBottom: 10 }}>Start with verified supplier records</h2>
         <p style={{ fontSize: 14.5, color: "#6B7280", marginBottom: 26 }}>Search by product, industry, or category.</p>
         <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
-          <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Factories</button>
+          <button onClick={() => onSearch("")} style={{ padding: "10px 22px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
           <button onClick={onIndustries} style={{ padding: "10px 22px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Browse Industries</button>
         </div>
       </section>
@@ -3110,8 +3152,8 @@ function AboutPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) =>
 
 const PRIVACY_SECTIONS = [
   { title: "Information we collect", body: "We collect information you provide when creating an account, purchasing contact credits, submitting verification requests, or contacting us. This includes email address, name, company information, and country." },
-  { title: "Account information", body: "Account registration requires a work email and password. Your account stores saved factory profiles, unlocked contact records, contact credit balance, and verification request history." },
-  { title: "Contact and verification request information", body: "When you submit a contact unlock or verification request, we store the factory reference, request details, and your contact information to process and respond to your request." },
+  { title: "Account information", body: "Account registration requires a work email and password. Your account stores saved supplier profiles, unlocked contact records, contact credit balance, and verification request history." },
+  { title: "Contact and verification request information", body: "When you submit a contact unlock or verification request, we store the supplier reference, request details, and your contact information to process and respond to your request." },
   { title: "Payment-related information", body: "Contact credit purchases are processed through a third-party payment provider. FactoryRoster does not store payment card details. We retain purchase records for accounting and support purposes." },
   { title: "Analytics and cookies", body: "We use analytics to understand how the platform is used. Standard web cookies may be used for session management and platform functionality." },
   { title: "How we use information", body: "We use your information to operate the platform, fulfill contact credit purchases, process verification requests, respond to support inquiries, and improve the service. We do not sell your data to third parties." },
@@ -3121,14 +3163,14 @@ const PRIVACY_SECTIONS = [
 ];
 
 const TERMS_SECTIONS = [
-  { title: "FactoryRoster service scope", body: "FactoryRoster provides verified factory information, contact intelligence, and factory verification support for sourcing research. Use of this service is subject to these terms." },
-  { title: "Information service only", body: "FactoryRoster is an information service. Published factory records represent information verified at the time of listing. Records may not reflect all current factory conditions." },
-  { title: "No marketplace or transaction role", body: "FactoryRoster does not participate in transactions, payments, logistics, contracts, inspections, or buyer-supplier agreements. Buyers and factories manage their own commercial relationships independently." },
+  { title: "FactoryRoster service scope", body: "FactoryRoster provides verified supplier information, contact intelligence, and supplier verification support for sourcing research. Use of this service is subject to these terms." },
+  { title: "Information service only", body: "FactoryRoster is an information service. Published supplier records represent information verified at the time of listing and may not reflect all current conditions." },
+  { title: "No marketplace or transaction role", body: "FactoryRoster does not participate in transactions, payments, logistics, contracts, inspections, or buyer-supplier agreements. Buyers and suppliers manage their own commercial relationships independently." },
   { title: "Contact credits", body: "Contact credits unlock individual verified contact records. Credits are for personal sourcing research use. FactoryRoster does not guarantee that contact information will result in a successful supplier relationship." },
-  { title: "Factory verification requests", body: "Verification request services are available to eligible users. Scope and availability vary by factory and request type. FactoryRoster will confirm available scope before proceeding." },
-  { title: "Buyer responsibility", body: "Buyers are responsible for their own due diligence, including product quality, contract terms, compliance, payment arrangements, and order fulfillment. FactoryRoster does not represent buyers or factories in transactions." },
-  { title: "Supplier information and updates", body: "Factory records are based on information reviewed at verification time. Suppliers may request corrections through the Contact page. FactoryRoster reviews correction requests but does not guarantee immediate updates." },
-  { title: "No guarantee of product quality, pricing, delivery, or compliance", body: "FactoryRoster verifies identity, contactability, and factory evidence only. We make no guarantee regarding product quality, pricing accuracy, delivery performance, or regulatory compliance." },
+  { title: "Supplier verification requests", body: "Verification request services are available to eligible users. Scope and availability vary by supplier and request type. FactoryRoster will confirm available scope before proceeding." },
+  { title: "Buyer responsibility", body: "Buyers are responsible for their own due diligence, including product quality, contract terms, compliance, payment arrangements, and order fulfillment. FactoryRoster does not represent buyers or suppliers in transactions." },
+  { title: "Supplier information and updates", body: "Supplier records are based on information reviewed at verification time. Suppliers may request corrections through the Contact page. FactoryRoster reviews correction requests but does not guarantee immediate updates." },
+  { title: "No guarantee of product quality, pricing, delivery, or compliance", body: "FactoryRoster verifies identity, contactability, and supplier-type supply evidence only. We make no guarantee regarding product quality, pricing accuracy, delivery performance, regulatory compliance, or transaction outcomes." },
   { title: "Account use", body: "You are responsible for maintaining account security. Accounts may not be shared or used in violation of these terms. FactoryRoster may suspend accounts that violate usage terms." },
   { title: "Contact", body: "Questions about these terms? Contact FactoryRoster through the Contact page." },
 ];
@@ -3138,7 +3180,7 @@ function LegalPage({ kind, onNav }: { kind: "privacy" | "terms"; onNav: (k: stri
   const title = isPrivacy ? "Privacy Policy" : "Terms of Service";
   const intro = isPrivacy
     ? "This Privacy Policy explains how FactoryRoster collects and uses information related to accounts, contact credit purchases, verification requests, and website usage."
-    : "These terms explain the use of FactoryRoster as a verified factory information and contact intelligence service. FactoryRoster provides verified factory information for sourcing research only and does not participate in transactions, payments, logistics, contracts, inspections, or buyer-supplier agreements unless explicitly agreed in a separate service.";
+    : "These terms explain the use of FactoryRoster as a verified supplier information and contact intelligence service. FactoryRoster provides verified supplier information for sourcing research only and does not participate in transactions, payments, logistics, contracts, inspections, or buyer-supplier agreements unless explicitly agreed in a separate service.";
   const sections = isPrivacy ? PRIVACY_SECTIONS : TERMS_SECTIONS;
 
   return (
@@ -3201,7 +3243,7 @@ function NotFoundPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string)
         <p style={{ fontSize: 14, color: "#9CA3AF", lineHeight: 1.7, marginBottom: 28 }}>This page may have moved, be unavailable, or not yet listed on FactoryRoster.</p>
 
         <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 28 }}>
-          <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Factories</button>
+          <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
           <button onClick={onIndustries} style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Browse Industries</button>
         </div>
 

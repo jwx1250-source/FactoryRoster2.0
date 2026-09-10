@@ -4,7 +4,7 @@ export function SearchBox({ compact = false, defaultValue = "" }: { compact?: bo
   return (
     <form action="/search" className={compact ? "search-box search-box-compact" : "search-box"}>
       <Search size={22} strokeWidth={1.8} aria-hidden="true" />
-      <input name="q" defaultValue={defaultValue} aria-label="Search verified factories" placeholder="Search products, categories, factories or provinces" />
+      <input name="q" defaultValue={defaultValue} aria-label="Search verified suppliers" placeholder="Search products, categories, suppliers or provinces" />
       <button type="submit" className="button button-blue">Search factories</button>
     </form>
   );

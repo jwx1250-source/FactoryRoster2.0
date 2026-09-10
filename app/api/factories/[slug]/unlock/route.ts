@@ -15,7 +15,7 @@ export async function POST(_request: Request, context: RouteContext<"/api/factor
       .eq("is_published", true)
       .maybeSingle();
     if (factoryError) throw factoryError;
-    if (!factory) return noStoreJson({ error: "Factory not found" }, { status: 404 });
+    if (!factory) return noStoreJson({ error: "Supplier not found" }, { status: 404 });
 
     const { data, error } = await supabase.rpc("unlock_factory_contact", { p_factory_id: factory.id });
     if (error?.message.includes("Insufficient contact credits")) {

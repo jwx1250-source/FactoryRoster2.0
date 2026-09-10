@@ -15,5 +15,5 @@ export default async function FactoryAdminPage({ params }: { params: Promise<{ i
     supabase.from("industries").select("id,name").order("name"),
   ]);
   if (!factory.data) notFound();
-  return <section><h1 className="admin-title">Edit factory</h1><p className="admin-subtitle">Internal fields and locked contact details never appear in the public Data API.</p><AdminFactoryForm initialFactory={factory.data} initialVerifications={verifications.data ?? []} initialContact={contact.data} industries={industries.data ?? []} /></section>;
+  return <section><h1 className="admin-title">Edit supplier</h1><p className="admin-subtitle">Internal fields and locked contact details never appear in the public Data API.</p><AdminFactoryForm initialFactory={factory.data} initialVerifications={verifications.data ?? []} initialContact={contact.data} industries={industries.data ?? []} /></section>;
 }

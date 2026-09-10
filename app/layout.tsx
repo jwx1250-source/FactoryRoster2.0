@@ -4,11 +4,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "FactoryRoster — Verified China Manufacturers", template: "%s | FactoryRoster" },
-  description: "Search verified China manufacturers and unlock verified factory contact records.",
+  title: { default: "FactoryRoster — Verified China Suppliers", template: "%s | FactoryRoster" },
+  description: "Search verified China manufacturers, distributors, exporters, and wholesalers before you reach out.",
   openGraph: {
-    title: "FactoryRoster — Verified China Manufacturers",
-    description: "China Factory Intelligence · Verified Before Listed",
+    title: "FactoryRoster — Verified China Suppliers",
+    description: "China Supplier Intelligence · Verified Before Listed",
     url: siteUrl,
     siteName: "FactoryRoster",
     type: "website",

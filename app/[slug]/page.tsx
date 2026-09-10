@@ -6,7 +6,7 @@ const pages = ["verification", "pricing", "guides", "sign-in", "get-started", "c
 const titles: Record<string, string> = {
   verification: "Verification Process",
   pricing: "Pricing",
-  guides: "Factory Sourcing Guides",
+  guides: "China Supplier Sourcing Guides",
   "sign-in": "Sign In",
   "get-started": "Get Started",
   contact: "Contact",

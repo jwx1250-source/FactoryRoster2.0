@@ -23,21 +23,21 @@ export default async function AdminPage() {
   }
   const missing = (type: string) => rows.filter((factory) => !verifiedByFactory.get(factory.id)?.has(type)).length;
   const cards = [
-    ["Total factories", rows.length],
+    ["Total suppliers", rows.length],
     ["Published", rows.filter((row) => row.is_published).length],
     ["Drafts", rows.filter((row) => !row.is_published).length],
     ["Ready for review", rows.filter((row) => !row.is_published && verifiedByFactory.get(row.id)?.size === 3).length],
     ["Missing registration", missing("government_registration")],
     ["Missing contact", missing("business_contact")],
-    ["Missing evidence", missing("factory_evidence")],
+    ["Missing evidence", missing("supply_evidence")],
     ["New verification requests", requests.count ?? 0],
     ["New contact messages", messages.count ?? 0],
   ] as const;
   return (
     <section>
-      <div className="admin-heading"><div><h1 className="admin-title">Operations dashboard</h1><p className="admin-subtitle">Factory verification and buyer operations at a glance.</p></div><Link className="admin-primary" href="/admin/factories/new">Add factory</Link></div>
+      <div className="admin-heading"><div><h1 className="admin-title">Operations dashboard</h1><p className="admin-subtitle">Supplier verification and buyer operations at a glance.</p></div><Link className="admin-primary" href="/admin/factories/new">Add supplier</Link></div>
       <div className="admin-card-grid">{cards.map(([label, value]) => <article className="admin-stat" key={label}><strong>{value}</strong><span>{label}</span></article>)}</div>
-      <div className="admin-panel"><h2>Quick actions</h2><div className="admin-actions"><Link href="/admin/factories/new">Add Factory</Link><Link href="/admin/factories">Review Draft Factories</Link><Link href="/admin/verification-requests">View Verification Requests</Link><Link href="/admin/guides">Manage Guides</Link></div></div>
+      <div className="admin-panel"><h2>Quick actions</h2><div className="admin-actions"><Link href="/admin/factories/new">Add Supplier</Link><Link href="/admin/factories">Review Draft Suppliers</Link><Link href="/admin/verification-requests">View Verification Requests</Link><Link href="/admin/guides">Manage Guides</Link></div></div>
     </section>
   );
 }

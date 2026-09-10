@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import FigmaApp from "@/components/figma-app";
 import { industries } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Verified Manufacturers by Industry" };
+export const metadata: Metadata = { title: "Verified Suppliers by Industry" };
 
 export function generateStaticParams() {
   return industries.map((item) => ({ industrySlug: item.slug }));

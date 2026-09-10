@@ -12,7 +12,7 @@ async function getPublishedFactory(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ factorySlug: string }> }): Promise<Metadata> {
   const { factorySlug } = await params;
   const factory = await getPublishedFactory(factorySlug);
-  if (!factory) return { title: "Factory not found", robots: { index: false, follow: false } };
+  if (!factory) return { title: "Supplier not found", robots: { index: false, follow: false } };
   return { title: factory.seo_title || factory.company_name, description: factory.seo_description || factory.overview.slice(0, 160), alternates: { canonical: `${siteUrl}/factories/${factory.slug}` }, robots: { index: factory.is_indexable, follow: factory.is_indexable } };
 }
 

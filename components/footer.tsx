@@ -13,8 +13,8 @@ export function Footer() {
       <div className="shell footer-grid">
         <div className="footer-brand">
           <Link href="/" className="brand-link"><BrandMark /></Link>
-          <p>Verified factory information and contact intelligence for global sourcing teams.</p>
-          <span>China Factory Intelligence · Verified Before Listed</span>
+          <p>Verified supplier information and contact intelligence for global sourcing teams.</p>
+          <span>China Supplier Intelligence · Verified Before Listed</span>
         </div>
         {groups.map((group) => (
           <div className="footer-group" key={group.title}>
@@ -25,7 +25,7 @@ export function Footer() {
       </div>
       <div className="shell footer-bottom">
         <span>© {new Date().getFullYear()} FactoryRoster</span>
-        <span>Factory intelligence, not a marketplace.</span>
+        <span>Supplier intelligence, not a marketplace.</span>
       </div>
     </footer>
   );

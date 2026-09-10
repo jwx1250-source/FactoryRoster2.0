@@ -36,8 +36,8 @@ export const verificationChecks = [
     description: "A working business contact channel is independently checked and recorded.",
   },
   {
-    title: "Factory Evidence",
-    description: "Factory identity and operating evidence are reviewed before a profile is listed.",
+    title: "Supply Evidence",
+    description: "Evidence appropriate to the supplier type is reviewed before a profile is listed.",
   },
 ];
 

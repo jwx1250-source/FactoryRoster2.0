@@ -29,7 +29,7 @@ export default async function DashboardPage() {
           <div>
             <p style={{ fontFamily: "monospace", fontSize: 11, color: "#1E40AF" }}>BUYER WORKSPACE</p>
             <h1 style={{ fontSize: 32, margin: "8px 0" }}>Welcome, {profile?.full_name || authData.user.email}</h1>
-            <p style={{ color: "#6B7280" }}>{profile?.company_name || "Factory intelligence account"}</p>
+            <p style={{ color: "#6B7280" }}>{profile?.company_name || "Supplier intelligence account"}</p>
           </div>
           <DashboardActions />
         </div>

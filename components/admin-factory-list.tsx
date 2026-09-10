@@ -9,6 +9,7 @@ type FactoryRow = {
   company_name: string;
   chinese_name: string | null;
   record_id: string;
+  supplier_type: string;
   province: string;
   city: string;
   main_products: string[];
@@ -34,10 +35,10 @@ export default function AdminFactoryList() {
     fetch("/api/admin/factories?limit=100")
       .then(async (response) => {
         const body = await response.json();
-        if (!response.ok) throw new Error(body.error || "Unable to load factories");
+        if (!response.ok) throw new Error(body.error || "Unable to load suppliers");
         setRows(body.data ?? []);
       })
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load factories"))
+      .catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load suppliers"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -63,22 +64,22 @@ export default function AdminFactoryList() {
     setRows((current) => current.map((item) => item.id === row.id ? { ...item, ...body.data } : item));
   }
 
-  if (loading) return <p className="admin-notice">Loading factories…</p>;
+  if (loading) return <p className="admin-notice">Loading suppliers…</p>;
   if (error) return <p className="admin-error">{error}</p>;
 
   return <>
     <div className="admin-filterbar">
-      <input aria-label="Search factories" placeholder="Search name, record ID, city or product…" value={search} onChange={(event) => setSearch(event.target.value)} />
+      <input aria-label="Search suppliers" placeholder="Search name, record ID, city or product…" value={search} onChange={(event) => setSearch(event.target.value)} />
       <select aria-label="Publication status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">All statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
       <select aria-label="Province" value={province} onChange={(event) => setProvince(event.target.value)}><option value="all">All provinces</option>{provinces.map((item) => <option key={item}>{item}</option>)}</select>
       <select aria-label="Industry" value={industry} onChange={(event) => setIndustry(event.target.value)}><option value="all">All industries</option>{industries.map((item) => <option key={item}>{item}</option>)}</select>
-      <select aria-label="Verification" value={verification} onChange={(event) => setVerification(event.target.value)}><option value="all">All verification</option><option value="complete">Verification complete</option><option value="incomplete">Verification incomplete</option><option value="government_registration">Missing Government Registration</option><option value="business_contact">Missing Business Contact</option><option value="factory_evidence">Missing Factory Evidence</option></select>
+      <select aria-label="Verification" value={verification} onChange={(event) => setVerification(event.target.value)}><option value="all">All verification</option><option value="complete">Verification complete</option><option value="incomplete">Verification incomplete</option><option value="government_registration">Missing Government Registration</option><option value="business_contact">Missing Business Contact</option><option value="supply_evidence">Missing Supply Evidence</option></select>
       <select aria-label="Indexing" value={indexing} onChange={(event) => setIndexing(event.target.value)}><option value="all">All indexing</option><option value="indexable">Indexable</option><option value="noindex">Noindex</option></select>
       <div className="admin-notice">{filtered.length} shown / {rows.length} total</div>
     </div>
-    <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Factory</th><th>Record ID</th><th>Industry</th><th>Location</th><th>Verification</th><th>Published</th><th>Indexing</th><th>Last verified</th><th>Updated</th><th>Actions</th></tr></thead><tbody>
-      {filtered.map((row) => <tr key={row.id}><td><strong>{row.company_name}</strong><br /><span>{row.chinese_name || "—"}</span></td><td>{row.record_id}</td><td>{row.industries?.name || "—"}</td><td>{row.city}, {row.province}</td><td><span className={`admin-badge ${(row.verification_records ?? []).filter((check) => check.status === "verified").length === 3 ? "ok" : "warn"}`}>{(row.verification_records ?? []).filter((check) => check.status === "verified").length}/3 verified</span></td><td>{row.is_published ? "Yes" : "No"}</td><td>{row.is_indexable ? "Indexable" : "Noindex"}</td><td>{row.last_verified_at ? new Date(row.last_verified_at).toLocaleDateString() : "—"}</td><td>{new Date(row.updated_at).toLocaleDateString()}</td><td><div className="admin-actions"><Link href={`/admin/factories/${row.id}`}>Edit</Link>{row.is_published && <Link href={`/factories/${row.slug}`} target="_blank">Preview</Link>}<button className="admin-secondary" onClick={() => patchFactory(row, { is_published: !row.is_published, is_indexable: row.is_published ? false : row.is_indexable })}>{row.is_published ? "Unpublish" : "Publish"}</button><button className="admin-secondary" onClick={() => patchFactory(row, { is_indexable: !row.is_indexable })}>{row.is_indexable ? "Noindex" : "Index"}</button></div></td></tr>)}
-      {filtered.length === 0 && <tr><td colSpan={10}>No factories match these filters.</td></tr>}
+    <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Supplier</th><th>Type</th><th>Record ID</th><th>Industry</th><th>Location</th><th>Verification</th><th>Published</th><th>Indexing</th><th>Last verified</th><th>Updated</th><th>Actions</th></tr></thead><tbody>
+      {filtered.map((row) => <tr key={row.id}><td><strong>{row.company_name}</strong><br /><span>{row.chinese_name || "—"}</span></td><td>{row.supplier_type?.replaceAll("_", " ")}</td><td>{row.record_id}</td><td>{row.industries?.name || "—"}</td><td>{row.city}, {row.province}</td><td><span className={`admin-badge ${(row.verification_records ?? []).filter((check) => check.status === "verified").length === 3 ? "ok" : "warn"}`}>{(row.verification_records ?? []).filter((check) => check.status === "verified").length}/3 verified</span></td><td>{row.is_published ? "Yes" : "No"}</td><td>{row.is_indexable ? "Indexable" : "Noindex"}</td><td>{row.last_verified_at ? new Date(row.last_verified_at).toLocaleDateString() : "—"}</td><td>{new Date(row.updated_at).toLocaleDateString()}</td><td><div className="admin-actions"><Link href={`/admin/factories/${row.id}`}>Edit</Link>{row.is_published && <Link href={`/factories/${row.slug}`} target="_blank">Preview</Link>}<button className="admin-secondary" onClick={() => patchFactory(row, { is_published: !row.is_published, is_indexable: row.is_published ? false : row.is_indexable })}>{row.is_published ? "Unpublish" : "Publish"}</button><button className="admin-secondary" onClick={() => patchFactory(row, { is_indexable: !row.is_indexable })}>{row.is_indexable ? "Noindex" : "Index"}</button></div></td></tr>)}
+      {filtered.length === 0 && <tr><td colSpan={11}>No suppliers match these filters.</td></tr>}
     </tbody></table></div>
   </>;
 }

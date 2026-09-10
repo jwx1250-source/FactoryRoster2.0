@@ -4,6 +4,7 @@ import { getAdminResource, sanitizeAdminPayload } from "@/lib/admin-resources";
 import { requireAdmin } from "@/lib/auth";
 import { apiError, noStoreJson } from "@/lib/http";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { EVIDENCE_BY_SUPPLIER_TYPE, MOQ_LEVELS, SUPPLIER_TYPES, SUPPLY_EVIDENCE_TYPES, SUPPLY_MODELS } from "@/lib/domain/rules";
 
 const bodySchema = z.record(z.string(), z.unknown());
 
@@ -45,6 +46,17 @@ export async function POST(request: Request, context: RouteContext<"/api/admin/[
 
     const payload = sanitizeAdminPayload(bodySchema.parse(await request.json()), config.create);
     if (resource === "factories") {
+      const supplierType = String(payload.supplier_type ?? "");
+      const evidenceType = String(payload.supply_evidence_type ?? "");
+      if (!SUPPLIER_TYPES.includes(supplierType as (typeof SUPPLIER_TYPES)[number])) {
+        return noStoreJson({ error: "Supplier type is required." }, { status: 400 });
+      }
+      if (!SUPPLY_EVIDENCE_TYPES.includes(evidenceType as (typeof SUPPLY_EVIDENCE_TYPES)[number]) || !EVIDENCE_BY_SUPPLIER_TYPE[supplierType as keyof typeof EVIDENCE_BY_SUPPLIER_TYPE].includes(evidenceType as never)) {
+        return noStoreJson({ error: "Select a supply evidence type that matches the supplier type." }, { status: 400 });
+      }
+      if (!MOQ_LEVELS.includes(String(payload.moq_level) as (typeof MOQ_LEVELS)[number]) || !SUPPLY_MODELS.includes(String(payload.supply_model) as (typeof SUPPLY_MODELS)[number])) {
+        return noStoreJson({ error: "MOQ fit and supply model are required." }, { status: 400 });
+      }
       payload.is_published = false;
       payload.is_indexable = false;
     }
