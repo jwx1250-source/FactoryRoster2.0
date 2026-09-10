@@ -2,7 +2,7 @@ import { apiError } from "@/lib/http";
 import { contactPreview } from "@/lib/domain/rules";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const PUBLIC_SUPPLIER_FIELDS = "id,slug,company_name,chinese_name,record_id,province,city,district,address_public,established_year,employee_range,factory_size,annual_revenue_range,main_products,capabilities,export_markets,certifications,trade_terms,moq,website_url,factory_type,supplier_type,supply_evidence_type,moq_level,supports_small_orders,supports_sample_orders,supports_private_label,supply_model,overview,last_verified_at,has_verified_contact,industries(name,slug,code)";
+const PUBLIC_SUPPLIER_FIELDS = "id,slug,company_name,chinese_name,record_id,province,city,district,address_public,established_year,employee_range,factory_size,annual_revenue_range,main_products,capabilities,export_markets,certifications,trade_terms,moq,website_url,factory_type,supplier_type,supply_evidence_type,moq_level,supports_small_orders,supports_sample_orders,supports_private_label,supply_model,overview,last_verified_at,has_verified_contact,industries!factories_industry_id_fkey(name,slug,code),secondary_category:industries!factories_secondary_category_id_fkey(name,slug)";
 
 export async function GET(_request: Request, context: RouteContext<"/api/factories/[slug]">) {
   try {

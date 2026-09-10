@@ -1,30 +1,15 @@
-import {
-  Boxes,
-  CircuitBoard,
-  CookingPot,
-  Dumbbell,
-  LampDesk,
-  PackageOpen,
-  PawPrint,
-  Shirt,
-  Sofa,
-  SprayCan,
-} from "lucide-react";
+import { Boxes, CircuitBoard, CookingPot, Dumbbell, LampDesk, PackageOpen, PawPrint, Shirt, Sofa, SprayCan } from "lucide-react";
+import { PRIMARY_INDUSTRIES } from "@/lib/categories";
 
 export const siteUrl = "https://factoryroster.com";
 
-export const industries = [
-  { name: "LED Lighting", slug: "led-lighting", detail: "Fixtures · Drivers · Components", icon: LampDesk },
-  { name: "Cosmetic Packaging", slug: "cosmetic-packaging", detail: "Jars · Tubes · Pumps", icon: SprayCan },
-  { name: "Paper Boxes", slug: "paper-boxes", detail: "Rigid · Folding · Printed", icon: PackageOpen },
-  { name: "Plastic Bottles", slug: "plastic-bottles", detail: "PET · HDPE · Custom molding", icon: Boxes },
-  { name: "Furniture", slug: "furniture", detail: "Home · Office · Outdoor", icon: Sofa },
-  { name: "Kitchenware", slug: "kitchenware", detail: "Cookware · Tools · Storage", icon: CookingPot },
-  { name: "Pet Products", slug: "pet-products", detail: "Accessories · Care · Travel", icon: PawPrint },
-  { name: "Sports Goods", slug: "sports-goods", detail: "Fitness · Outdoor · Team", icon: Dumbbell },
-  { name: "Electronics", slug: "electronics", detail: "Devices · Components · OEM", icon: CircuitBoard },
-  { name: "Home Textiles", slug: "home-textiles", detail: "Bedding · Towels · Fabrics", icon: Shirt },
-];
+const industryIcons = [CircuitBoard, LampDesk, PackageOpen, Boxes, Sofa, SprayCan, CookingPot, PawPrint, Shirt, Dumbbell];
+export const industries = PRIMARY_INDUSTRIES.map((industry, index) => ({
+  name: industry.name,
+  slug: industry.slug,
+  detail: industry.secondaryCategories.slice(0, 3).map((category) => category.name).join(" · "),
+  icon: industryIcons[index],
+}));
 
 export const verificationChecks = [
   {
@@ -42,7 +27,7 @@ export const verificationChecks = [
 ];
 
 export const navItems = [
-  { href: "/search", label: "All Factories" },
+  { href: "/search", label: "All Suppliers" },
   { href: "/industries", label: "Industries" },
   { href: "/pricing", label: "Pricing" },
   { href: "/guides", label: "Guides" },

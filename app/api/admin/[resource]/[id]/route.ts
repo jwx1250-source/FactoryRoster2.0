@@ -38,11 +38,14 @@ export async function PATCH(request: Request, context: RouteContext<"/api/admin/
         .from("verification_records")
         .select("verification_type,status,verification_method,evidence_note,verified_at")
         .eq("factory_id", id),
-        supabase.from("factories").select("supplier_type,supply_evidence_type").eq("id", id).maybeSingle(),
+        supabase.from("factories").select("supplier_type,supply_evidence_type,industry_id,secondary_category_id").eq("id", id).maybeSingle(),
       ]);
       if (checkError || supplierError) throw checkError ?? supplierError;
       const supplierType = String(payload.supplier_type ?? supplier?.supplier_type ?? "");
       const evidenceType = String(payload.supply_evidence_type ?? supplier?.supply_evidence_type ?? "");
+      if (!String(payload.industry_id ?? supplier?.industry_id ?? "") || !String(payload.secondary_category_id ?? supplier?.secondary_category_id ?? "")) {
+        return noStoreJson({ error: "Primary Industry and Secondary Category are required before publishing." }, { status: 409 });
+      }
       if (!SUPPLIER_TYPES.includes(supplierType as (typeof SUPPLIER_TYPES)[number]) || !SUPPLY_EVIDENCE_TYPES.includes(evidenceType as (typeof SUPPLY_EVIDENCE_TYPES)[number]) || !EVIDENCE_BY_SUPPLIER_TYPE[supplierType as keyof typeof EVIDENCE_BY_SUPPLIER_TYPE]?.includes(evidenceType as never)) {
         return noStoreJson({ error: "Select a valid supplier type and matching supply evidence type before publishing." }, { status: 409 });
       }

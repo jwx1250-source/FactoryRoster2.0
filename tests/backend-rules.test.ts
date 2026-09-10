@@ -3,9 +3,10 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { applyContactUnlock, canIndexFactory, canPublishSupplier, contactPreview, supplierTypeLabel, supplyEvidenceLabel } from "../lib/domain/rules";
+import { PRIMARY_INDUSTRIES } from "../lib/categories";
 import { PLAN_CATALOG } from "../lib/plans";
 
-const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql", "20260909073911_automate_factory_internal_fields.sql", "20260910031558_expand_to_supplier_intelligence.sql"]
+const migration = ["20260908091039_create_factoryroster_schema.sql", "20260909042411_admin_foundation.sql", "20260909073911_automate_factory_internal_fields.sql", "20260910031558_expand_to_supplier_intelligence.sql", "20260910072435_supplier_category_taxonomy.sql"]
   .map((file) => readFileSync(resolve(process.cwd(), "supabase/migrations", file), "utf8"))
   .join("\n");
 
@@ -38,6 +39,23 @@ describe("supplier intelligence labels", () => {
   it("keeps manufacturer factory evidence support", () => {
     expect(supplierTypeLabel("manufacturer")).toBe("Verified Manufacturer");
     expect(supplyEvidenceLabel("factory_evidence")).toBe("Factory Evidence");
+  });
+
+  it("uses brand ownership evidence for brand owners", () => {
+    expect(supplyEvidenceLabel("brand_ownership_evidence")).toBe("Brand Ownership Evidence");
+  });
+});
+
+describe("two-level supplier categories", () => {
+  it("defines the ten first-batch primary industries with secondary categories", () => {
+    expect(PRIMARY_INDUSTRIES).toHaveLength(10);
+    expect(PRIMARY_INDUSTRIES.every((industry) => industry.secondaryCategories.length >= 7)).toBe(true);
+    expect(new Set(PRIMARY_INDUSTRIES.map((industry) => industry.slug)).size).toBe(10);
+  });
+
+  it("keeps secondary category slugs unique across parents", () => {
+    const slugs = PRIMARY_INDUSTRIES.flatMap((industry) => industry.secondaryCategories.map((category) => category.slug));
+    expect(new Set(slugs).size).toBe(slugs.length);
   });
 });
 

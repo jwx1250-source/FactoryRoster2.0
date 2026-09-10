@@ -26,6 +26,7 @@ export const SUPPLY_EVIDENCE_TYPES = [
   "inventory_evidence",
   "fulfillment_evidence",
   "showroom_evidence",
+  "brand_ownership_evidence",
   "service_capability_evidence",
 ] as const;
 
@@ -63,6 +64,7 @@ export const SUPPLY_EVIDENCE_LABELS: Record<SupplyEvidenceType, string> = {
   inventory_evidence: "Inventory Evidence",
   fulfillment_evidence: "Fulfillment Evidence",
   showroom_evidence: "Showroom Evidence",
+  brand_ownership_evidence: "Brand Ownership Evidence",
   service_capability_evidence: "Service Capability Evidence",
 };
 
@@ -73,7 +75,7 @@ export const EVIDENCE_BY_SUPPLIER_TYPE: Record<SupplierType, readonly SupplyEvid
   trading_company: ["supply_chain_evidence"],
   exporter: ["export_evidence"],
   wholesaler: ["inventory_evidence", "fulfillment_evidence", "showroom_evidence"],
-  brand_owner: ["authorization_evidence", "supplier_relationship_evidence"],
+  brand_owner: ["brand_ownership_evidence"],
   sourcing_service_provider: ["service_capability_evidence"],
 };
 

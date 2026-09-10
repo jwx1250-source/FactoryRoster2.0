@@ -73,7 +73,9 @@ body {
 .admin-danger { color: #b91c1c; border-color: #fecaca; }
 .admin-notice { padding: 12px 14px; border-radius: 8px; font-size: 13px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
 .admin-error { padding: 12px 14px; border-radius: 8px; font-size: 13px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
-.admin-filterbar { display: grid; grid-template-columns: 2fr repeat(3,1fr); gap: 10px; margin: 22px 0 12px; }
+.admin-filterbar { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 10px; margin: 22px 0 12px; }
+.admin-filterbar > input:first-child { grid-column: span 2; }
+.admin-category-groups { display: grid; gap: 12px; margin-top: 24px; }
 .admin-table-wrap { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
 .admin-table { width: 100%; border-collapse: collapse; min-width: 880px; font-size: 12px; }
 .admin-table th { text-align: left; padding: 10px 12px; background: #f8fafc; color: #6b7280; border-bottom: 1px solid #e5e7eb; text-transform: uppercase; letter-spacing: .04em; }
@@ -89,6 +91,7 @@ body {
   .admin-heading { flex-direction: column; }
   .admin-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-fields, .admin-filterbar { grid-template-columns: 1fr; }
+  .admin-filterbar > input:first-child { grid-column: auto; }
   .admin-field.full { grid-column: auto; }
 }
 

@@ -12,7 +12,7 @@ export default async function FactoryAdminPage({ params }: { params: Promise<{ i
     supabase.from("factories").select("*").eq("id", id).maybeSingle(),
     supabase.from("verification_records").select("*").eq("factory_id", id).order("verification_type"),
     supabase.from("factory_contacts").select("*").eq("factory_id", id).maybeSingle(),
-    supabase.from("industries").select("id,name").order("name"),
+    supabase.from("industries").select("id,name,parent_id,primary_industry,secondary_category").order("sort_order").order("name"),
   ]);
   if (!factory.data) notFound();
   return <section><h1 className="admin-title">Edit supplier</h1><p className="admin-subtitle">Internal fields and locked contact details never appear in the public Data API.</p><AdminFactoryForm initialFactory={factory.data} initialVerifications={verifications.data ?? []} initialContact={contact.data} industries={industries.data ?? []} /></section>;

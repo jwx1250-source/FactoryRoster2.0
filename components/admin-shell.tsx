@@ -1,9 +1,11 @@
 import Link from "next/link";
 import AdminResourceTable from "@/components/admin-resource-table";
+import AdminCategoryManager from "@/components/admin-category-manager";
 
 const links = [
   ["Dashboard", "/admin"],
   ["Suppliers", "/admin/factories"],
+  ["Categories", "/admin/industries"],
   ["Contacts", "/admin/contacts"],
   ["Verification Records", "/admin/verification-records"],
   ["Verification Requests", "/admin/verification-requests"],
@@ -26,6 +28,7 @@ export function AdminNav() {
 }
 
 export function AdminResourcePage({ resource }: { resource: string }) {
+  if (resource === "industries") return <section><h1 className="admin-title">Categories</h1><p className="admin-subtitle">Maintain the two-level Primary Industry and Secondary Category structure.</p><AdminCategoryManager /></section>;
   return (
     <section>
       <h1 className="admin-title">{resource.replaceAll("-", " ")}</h1>

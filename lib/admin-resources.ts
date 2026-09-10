@@ -9,8 +9,8 @@ type ResourceConfig = {
 export const ADMIN_RESOURCES = {
   factories: {
     table: "factories",
-    create: ["company_name", "chinese_name", "industry_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "supplier_type", "supply_evidence_type", "moq_level", "supports_small_orders", "supports_sample_orders", "supports_private_label", "supply_model", "overview", "is_published", "is_indexable", "seo_title", "seo_description", "internal_notes", "source_notes"],
-    update: ["company_name", "chinese_name", "industry_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "supplier_type", "supply_evidence_type", "moq_level", "supports_small_orders", "supports_sample_orders", "supports_private_label", "supply_model", "overview", "is_published", "is_indexable", "seo_title", "seo_description", "internal_notes", "source_notes"],
+    create: ["company_name", "chinese_name", "industry_id", "secondary_category_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "supplier_type", "supply_evidence_type", "moq_level", "supports_small_orders", "supports_sample_orders", "supports_private_label", "supply_model", "overview", "is_published", "is_indexable", "seo_title", "seo_description", "internal_notes", "source_notes"],
+    update: ["company_name", "chinese_name", "industry_id", "secondary_category_id", "province", "city", "district", "address_public", "established_year", "employee_range", "factory_size", "annual_revenue_range", "main_products", "capabilities", "export_markets", "certifications", "trade_terms", "moq", "website_url", "factory_type", "supplier_type", "supply_evidence_type", "moq_level", "supports_small_orders", "supports_sample_orders", "supports_private_label", "supply_model", "overview", "is_published", "is_indexable", "seo_title", "seo_description", "internal_notes", "source_notes"],
     orderBy: "updated_at",
   },
   contacts: {
@@ -59,8 +59,8 @@ export const ADMIN_RESOURCES = {
   },
   industries: {
     table: "industries",
-    create: ["slug", "name", "code", "description", "product_examples", "common_regions", "is_featured", "sort_order", "seo_title", "seo_description"],
-    update: ["slug", "name", "code", "description", "product_examples", "common_regions", "is_featured", "sort_order", "seo_title", "seo_description"],
+    create: ["slug", "name", "code", "parent_id", "primary_industry", "secondary_category", "description", "product_examples", "common_regions", "is_featured", "sort_order", "seo_title", "seo_description"],
+    update: ["slug", "name", "code", "parent_id", "primary_industry", "secondary_category", "description", "product_examples", "common_regions", "is_featured", "sort_order", "seo_title", "seo_description"],
     orderBy: "sort_order",
   },
 } as const satisfies Record<string, ResourceConfig>;

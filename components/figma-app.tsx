@@ -3,8 +3,10 @@
 /* eslint-disable react/no-unescaped-entities, @typescript-eslint/no-unused-vars */
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supplierTypeLabel, supplyEvidenceLabel } from "@/lib/domain/rules";
+import { formatCategoryLabel, PRIMARY_INDUSTRIES } from "@/lib/categories";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -114,6 +116,9 @@ interface SearchResult {
   slug?: string;
   name: string;
   industry: string;
+  industrySlug?: string;
+  secondaryCategories?: string[];
+  secondaryCategorySlug?: string;
   province: string;
   city: string;
   established: number;
@@ -130,6 +135,7 @@ interface SearchResult {
   supportsSampleOrders?: boolean;
   supportsPrivateLabel?: boolean;
   supplyModel?: string;
+  profile?: Record<string, unknown>;
 }
 
 interface UnlockedContact {
@@ -151,11 +157,16 @@ function formatDate(value?: string | null) {
 }
 
 function apiFactoryToResult(factory: Record<string, unknown>): SearchResult {
+  const primaryCategory = factory.industries as { name?: string; slug?: string } | null | undefined;
+  const secondaryCategory = factory.secondary_category as { name?: string; slug?: string } | null | undefined;
   return {
     id: String(factory.record_id ?? factory.id ?? ""),
     slug: String(factory.slug ?? ""),
     name: String(factory.company_name ?? "Unnamed supplier"),
-    industry: String(factory.industry_name ?? "Supplier"),
+    industry: String(factory.primary_industry_name ?? factory.industry_name ?? primaryCategory?.name ?? "Supplier"),
+    industrySlug: String(factory.primary_industry_slug ?? factory.industry_slug ?? primaryCategory?.slug ?? ""),
+    secondaryCategories: factory.secondary_category_name ? [String(factory.secondary_category_name)] : secondaryCategory?.name ? [secondaryCategory.name] : [],
+    secondaryCategorySlug: String(factory.secondary_category_slug ?? secondaryCategory?.slug ?? ""),
     province: String(factory.province ?? ""),
     city: String(factory.city ?? ""),
     established: Number(factory.established_year ?? 0),
@@ -172,6 +183,7 @@ function apiFactoryToResult(factory: Record<string, unknown>): SearchResult {
     supportsSampleOrders: Boolean(factory.supports_sample_orders),
     supportsPrivateLabel: Boolean(factory.supports_private_label),
     supplyModel: String(factory.supply_model ?? "factory_direct"),
+    profile: factory,
   };
 }
 
@@ -196,18 +208,7 @@ type Page =
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const CATEGORIES = [
-  { name: "LED Lighting", count: "1,247", code: "LED" },
-  { name: "Cosmetic Packaging", count: "934", code: "PKG" },
-  { name: "Paper Boxes", count: "1,108", code: "PPR" },
-  { name: "Plastic Bottles", count: "722", code: "PLS" },
-  { name: "Furniture", count: "1,893", code: "FRN" },
-  { name: "Kitchenware", count: "2,014", code: "KIT" },
-  { name: "Pet Products", count: "648", code: "PET" },
-  { name: "Sports Goods", count: "891", code: "SPT" },
-  { name: "Electronics", count: "3,201", code: "ELC" },
-  { name: "Home Textiles", count: "1,445", code: "TEX" },
-];
+const CATEGORIES = PRIMARY_INDUSTRIES;
 
 const RECENT_FACTORIES: SearchResult[] = [
   { id: "FR-GD-08241", name: "Shenzhen Luminos Technology Co., Ltd.", industry: "LED Lighting", province: "Guangdong", city: "Shenzhen", established: 2009, employees: "200–500", exportRate: "90%", mainProducts: ["LED Strip Lights", "LED Panel Lights", "LED Downlights", "Commercial Fixtures"], verifiedDate: "Sep 4, 2026" },
@@ -434,24 +435,23 @@ function Industries({ onSearch }: { onSearch: (q: string) => void }) {
           <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117" }}>Popular Verified Industries</h2>
           <Mono color="#9CA3AF">Every listed supplier has passed our verification checks</Mono>
         </div>
-        <a href="#" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#1E40AF", textDecoration: "none" }}>View all <ChevronRight /></a>
+        <Link href="/industries" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#1E40AF", textDecoration: "none" }}>View all <ChevronRight /></Link>
       </div>
-      <div className="r5" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
+      <div className="r2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
         {CATEGORIES.map((cat) => (
           <a key={cat.name} href="#" onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
-            style={{ display: "flex", flexDirection: "column", gap: 0, padding: "18px 18px 16px", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none", background: "#fff", transition: "border-color 0.15s,box-shadow 0.15s" }}
+            style={{ display: "flex", flexDirection: "column", gap: 0, padding: "20px", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none", background: "#fff", transition: "border-color 0.15s,box-shadow 0.15s" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#1E40AF"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 14px rgba(30,64,175,0.08)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none"; }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <span style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 9, fontWeight: 500, letterSpacing: "0.07em", color: "#9CA3AF", background: "#F7F8FA", border: "1px solid #E9ECF1", borderRadius: 4, padding: "2px 6px" }}>{cat.code}</span>
               <span style={{ color: "#D1D5DB" }}><ChevronRight /></span>
             </div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#0D1117", letterSpacing: "-0.1px", marginBottom: 6, lineHeight: 1.3 }}>{cat.name}</p>
-            <Mono color="#9CA3AF">
-              {parseInt(cat.count.replace(",", "")) < 100
-                ? "Verified suppliers being added"
-                : `${cat.count} verified suppliers`}
-            </Mono>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#0D1117", letterSpacing: "-0.2px", marginBottom: 6, lineHeight: 1.3 }}>{cat.name}</p>
+            <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.6, marginBottom: 12 }}>{cat.description}</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>{cat.secondaryCategories.slice(0, 5).map((category) => <span key={category.slug} style={{ padding: "3px 8px", borderRadius: 5, background: "#F7F8FA", border: "1px solid #E9ECF1", fontSize: 11, color: "#6B7280" }}>{category.name}</span>)}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, paddingTop: 12, borderTop: "1px solid #F0F1F3", marginTop: "auto" }}><div><FieldLabel>Available supplier types</FieldLabel><p style={{ fontSize: 11.5, color: "#374151", marginTop: 4 }}>{cat.supplierTypes}</p></div><div><FieldLabel>MOQ fit</FieldLabel><p style={{ fontSize: 11.5, color: "#374151", marginTop: 4 }}>{cat.moqFit}</p></div></div>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "#1E40AF", fontSize: 12.5, fontWeight: 600, marginTop: 14 }}>View Suppliers <ArrowRight /></span>
           </a>
         ))}
       </div>
@@ -503,24 +503,34 @@ function VerificationSection() {
 }
 
 function RecentRecords({ onDetail }: { onDetail: (f: SearchResult) => void }) {
+  const [records, setRecords] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/factories?limit=6", { signal: controller.signal })
+      .then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error || "Unable to load suppliers"); setRecords((body.suppliers ?? body.factories ?? []).map(apiFactoryToResult)); })
+      .catch((reason) => { if (reason?.name !== "AbortError") setRecords([]); })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, []);
   return (
     <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 32px" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117" }}>Recently Verified</h2>
-          <Mono color="#9CA3AF">Last Updated · Sep 7, 2026</Mono>
+          <Mono color="#9CA3AF">Published records only</Mono>
         </div>
-        <a href="#" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#1E40AF", textDecoration: "none" }}>
+        <Link href="/search" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#1E40AF", textDecoration: "none" }}>
           Search all records <ArrowRight />
-        </a>
+        </Link>
       </div>
       <div className="r-scroll" style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, overflow: "hidden" }}>
         <div style={{ minWidth: 600, display: "grid", gridTemplateColumns: "1fr 140px 140px 130px 110px", padding: "10px 20px", background: "#F7F8FA", borderBottom: "1px solid #E9ECF1" }}>
           {["Supplier Name", "Industry", "Location", "Record ID", "Verified"].map((col) => (<FieldLabel key={col}>{col}</FieldLabel>))}
         </div>
-        {RECENT_FACTORIES.map((f, i) => (
+        {records.map((f, i) => (
           <a key={f.id} href="#" onClick={(e) => { e.preventDefault(); onDetail(f); }}
-            style={{ minWidth: 600, display: "grid", gridTemplateColumns: "1fr 140px 140px 130px 110px", padding: "14px 20px", borderBottom: i < RECENT_FACTORIES.length - 1 ? "1px solid #F0F1F3" : undefined, textDecoration: "none", background: "#fff", alignItems: "center", transition: "background 0.1s" }}
+            style={{ minWidth: 600, display: "grid", gridTemplateColumns: "1fr 140px 140px 130px 110px", padding: "14px 20px", borderBottom: i < records.length - 1 ? "1px solid #F0F1F3" : undefined, textDecoration: "none", background: "#fff", alignItems: "center", transition: "background 0.1s" }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#FAFBFC")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#fff")}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -535,6 +545,8 @@ function RecentRecords({ onDetail }: { onDetail: (f: SearchResult) => void }) {
             <Mono>{f.verifiedDate}</Mono>
           </a>
         ))}
+        {loading && <p style={{ padding: 20, color: "#6B7280", fontSize: 13 }}>Loading verified suppliers…</p>}
+        {!loading && records.length === 0 && <p style={{ padding: 20, color: "#6B7280", fontSize: 13 }}>No verified supplier records are currently available.</p>}
       </div>
     </section>
   );
@@ -632,7 +644,7 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
         </div>
         <div style={{ paddingTop: 20, borderTop: "1px solid #E9ECF1", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Mono color="#9CA3AF">© {new Date().getFullYear()} FactoryRoster · factoryroster.com</Mono>
-          <Mono color="#9CA3AF">14,847 verified records · updated daily</Mono>
+          <Mono color="#9CA3AF">Verified supplier records · reviewed before listing</Mono>
         </div>
       </div>
     </footer>
@@ -641,13 +653,7 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
 
 // ─── Search Results Page ───────────────────────────────────────────────────────
 
-const FILTER_PROVINCES = [
-  { name: "Guangdong", count: 412 },
-  { name: "Zhejiang", count: 187 },
-  { name: "Jiangsu", count: 143 },
-  { name: "Fujian", count: 89 },
-  { name: "Shandong", count: 76 },
-];
+const FILTER_PROVINCES = ["Guangdong", "Zhejiang", "Jiangsu", "Fujian", "Shandong"];
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -682,6 +688,8 @@ function FilterOption({ label, count, active, onClick }: { label: string; count?
 function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDetail: (f: SearchResult) => void; onSearch: (q: string) => void }) {
   const [localQuery, setLocalQuery] = useState(query);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
+  const [primaryIndustry, setPrimaryIndustry] = useState<string | null>(null);
+  const [secondaryCategory, setSecondaryCategory] = useState<string | null>(null);
   const [supplierType, setSupplierType] = useState<string | null>(null);
   const [moqLevel, setMoqLevel] = useState<string | null>(null);
   const [supplyModel, setSupplyModel] = useState<string | null>(null);
@@ -698,6 +706,8 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
     const params = new URLSearchParams({ limit: "50" });
     if (query.trim()) params.set("q", query.trim());
     if (activeProvince) params.set("province", activeProvince);
+    if (primaryIndustry) params.set("primary_industry", primaryIndustry);
+    if (secondaryCategory) params.set("secondary_category", secondaryCategory);
     if (supplierType) params.set("supplier_type", supplierType);
     if (moqLevel) params.set("moq_level", moqLevel);
     if (supplyModel) params.set("supply_model", supplyModel);
@@ -715,7 +725,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [query, activeProvince, supplierType, moqLevel, supplyModel, smallOrders, sampleOrders, privateLabel]);
+  }, [query, activeProvince, primaryIndustry, secondaryCategory, supplierType, moqLevel, supplyModel, smallOrders, sampleOrders, privateLabel]);
 
   const selectProvince = (province: string | null) => {
     setLoading(true);
@@ -763,13 +773,13 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
             </div>
           </div>
 
-          {/* Contact availability */}
-          <FilterSection title="Contact Availability">
-            <FilterOption label="Verified Phone" />
-            <FilterOption label="Verified Email" />
-            <FilterOption label="Contact Person" />
-            <FilterOption label="WhatsApp / WeChat" />
+          <FilterSection title="Primary Industry">
+            {PRIMARY_INDUSTRIES.map((industry) => <FilterOption key={industry.slug} label={industry.name} active={primaryIndustry === industry.slug} onClick={() => { const next = primaryIndustry === industry.slug ? null : industry.slug; setPrimaryIndustry(next); setSecondaryCategory(null); }} />)}
           </FilterSection>
+
+          {primaryIndustry && <FilterSection title="Secondary Category">
+            {(PRIMARY_INDUSTRIES.find((industry) => industry.slug === primaryIndustry)?.secondaryCategories ?? []).map((category) => <FilterOption key={category.slug} label={category.name} active={secondaryCategory === category.slug} onClick={() => setSecondaryCategory(secondaryCategory === category.slug ? null : category.slug)} />)}
+          </FilterSection>}
 
           <FilterSection title="Supplier Type">
             {[["Manufacturer", "manufacturer"], ["Authorized Distributor", "authorized_distributor"], ["First-tier Agent", "first_tier_agent"], ["Trading Company", "trading_company"], ["Exporter", "exporter"], ["Wholesaler", "wholesaler"], ["Brand Owner", "brand_owner"], ["Sourcing Service Provider", "sourcing_service_provider"]].map(([label, value]) => <FilterOption key={value} label={label} active={supplierType === value} onClick={() => setSupplierType(supplierType === value ? null : value)} />)}
@@ -791,16 +801,9 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
 
           {/* Province */}
           <FilterSection title="Province">
-            <FilterOption label="All provinces" count={847} active={activeProvince === null} onClick={() => selectProvince(null)} />
-            {FILTER_PROVINCES.map((p) => (
-              <FilterOption key={p.name} label={p.name} count={p.count} active={activeProvince === p.name} onClick={() => selectProvince(p.name === activeProvince ? null : p.name)} />
-            ))}
-          </FilterSection>
-
-          {/* Established */}
-          <FilterSection title="Established">
-            {[["Before 2005", 203], ["2005–2010", 318], ["2010–2015", 224], ["After 2015", 102]].map(([label, count]) => (
-              <FilterOption key={label as string} label={label as string} count={count as number} />
+            <FilterOption label="All provinces" active={activeProvince === null} onClick={() => selectProvince(null)} />
+            {FILTER_PROVINCES.map((province) => (
+              <FilterOption key={province} label={province} active={activeProvince === province} onClick={() => selectProvince(province === activeProvince ? null : province)} />
             ))}
           </FilterSection>
         </aside>
@@ -846,6 +849,12 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
 
 function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (f: SearchResult) => void }) {
   const [hovered, setHovered] = useState(false);
+  const fitBadges = [
+    r.moqLevel && formatCategoryLabel(r.moqLevel),
+    r.supportsSampleOrders && "Sample Supported",
+    r.supportsSmallOrders && "Small Batch Friendly",
+    r.supportsPrivateLabel && "Private Label",
+  ].filter(Boolean) as string[];
 
   return (
     <div
@@ -873,6 +882,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10, flexWrap: "wrap" as const }}>
         <span style={{ padding: "3px 8px", borderRadius: 5, background: "#ECFDF5", border: "1px solid #A7F3D0", fontSize: 11, fontWeight: 600, color: "#047857" }}>{supplierTypeLabel(r.supplierType)}</span>
         <Mono color="#6B7280">{r.industry}</Mono>
+        {r.secondaryCategories?.map((category) => <span key={category} style={{ padding: "2px 7px", borderRadius: 4, background: "#F7F8FA", border: "1px solid #E9ECF1", fontSize: 11, color: "#6B7280" }}>{category}</span>)}
         <span style={{ width: 1, height: 12, background: "#E5E7EB" }} />
         <Mono color="#6B7280">{r.city}, {r.province}, China</Mono>
         <span style={{ width: 1, height: 12, background: "#E5E7EB" }} />
@@ -893,6 +903,8 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
         <span style={{ width: 1, height: 10, background: "#E5E7EB" }} />
         <span style={{ fontSize: 12.5, color: "#6B7280" }}>{r.mainProducts.join("  ·  ")}</span>
       </div>
+
+      {fitBadges.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>{[...new Set(fitBadges)].map((badge) => <span key={badge} style={{ padding: "3px 8px", borderRadius: 5, background: badge === "Bulk Only" ? "#FFF7ED" : "#EFF3FF", border: `1px solid ${badge === "Bulk Only" ? "#FED7AA" : "#DBEAFE"}`, fontSize: 11, fontWeight: 600, color: badge === "Bulk Only" ? "#C2410C" : "#1E40AF" }}>{badge}</span>)}</div>}
 
       {/* Row 4: verification + contact preview */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 10 }}>
@@ -967,8 +979,7 @@ function ContactRow({ icon: Icon, label, value }: { icon: React.FC; label: strin
 
 function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResult; fromQuery: string; onBack: () => void }) {
   const router = useRouter();
-  const d = FACTORY_DETAIL;
-  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(factory.profile ?? null);
   const [profileError, setProfileError] = useState("");
   const [contact, setContact] = useState<UnlockedContact | null>(null);
   const [unlockBusy, setUnlockBusy] = useState(false);
@@ -1014,22 +1025,35 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
   };
 
   const companyName = String(profile?.company_name ?? factory.name);
-  const chineseName = String(profile?.chinese_name ?? d.nameZh);
-  const overview = String(profile?.overview ?? d.overview);
-  const products = Array.isArray(profile?.main_products) ? profile.main_products.map(String) : d.mainProducts;
-  const markets = Array.isArray(profile?.export_markets) ? profile.export_markets.map(String) : d.exportMarkets;
-  const certifications = Array.isArray(profile?.certifications) ? profile.certifications.map(String) : d.certifications;
+  const chineseName = String(profile?.chinese_name ?? "");
+  const overview = String(profile?.overview ?? "Supplier profile details are loading.");
+  const products = Array.isArray(profile?.main_products) ? profile.main_products.map(String) : factory.mainProducts;
+  const markets = Array.isArray(profile?.export_markets) ? profile.export_markets.map(String) : (factory.exportMarkets ?? []);
+  const certifications = Array.isArray(profile?.certifications) ? profile.certifications.map(String) : [];
   const supplierType = String(profile?.supplier_type ?? factory.supplierType ?? "manufacturer");
   const evidenceType = String(profile?.supply_evidence_type ?? factory.supplyEvidenceType ?? "factory_evidence");
+  const primaryIndustry = String((profile?.industries as { name?: string } | undefined)?.name ?? factory.industry);
+  const secondaryCategories = (profile?.secondary_category as { name?: string } | undefined)?.name ? [String((profile?.secondary_category as { name?: string }).name)] : (factory.secondaryCategories ?? []);
+  const moqLevel = String(profile?.moq_level ?? factory.moqLevel ?? "unknown");
+  const supplyModel = String(profile?.supply_model ?? factory.supplyModel ?? "factory_direct");
+  const supportsSampleOrders = Boolean(profile?.supports_sample_orders ?? factory.supportsSampleOrders);
+  const supportsSmallOrders = Boolean(profile?.supports_small_orders ?? factory.supportsSmallOrders);
+  const supportsPrivateLabel = Boolean(profile?.supports_private_label ?? factory.supportsPrivateLabel);
   const manufacturer = supplierType === "manufacturer";
 
   const overviewStats = [
+    { label: "Supplier Type", value: supplierTypeLabel(supplierType), verified: true },
+    { label: "Supply Model", value: formatCategoryLabel(supplyModel), verified: true },
+    { label: "Primary Industry", value: primaryIndustry, verified: true },
+    { label: "Secondary Categories", value: secondaryCategories.join(", ") || "Not classified", verified: true },
+    { label: "MOQ Level", value: formatCategoryLabel(moqLevel), verified: true },
+    { label: "Sample Orders", value: supportsSampleOrders ? "Supported" : "Not confirmed", verified: true },
+    { label: "Small Orders", value: supportsSmallOrders ? "Supported" : "Not confirmed", verified: true },
+    { label: "Private Label", value: supportsPrivateLabel ? "Supported" : "Not confirmed", verified: true },
     { label: "Established", value: String(profile?.established_year ?? (factory.established || "Not disclosed")), verified: true },
     { label: "Employees", value: String(profile?.employee_range ?? factory.employees), verified: true },
-    { label: manufacturer ? "Factory Size" : "Operation Size", value: String(profile?.factory_size ?? d.factorySize), verified: false },
-    { label: "Annual Revenue", value: String(profile?.annual_revenue_range ?? d.annualRevenue), verified: false },
-    { label: "Supplier Type", value: supplierTypeLabel(supplierType), verified: true },
-    { label: "MOQ", value: String(profile?.moq ?? d.minOrder), verified: false },
+    { label: manufacturer ? "Factory Size" : "Operation Size", value: String(profile?.factory_size ?? "Not disclosed"), verified: false },
+    { label: "MOQ Detail", value: String(profile?.moq ?? "Not disclosed"), verified: false },
   ];
 
   return (
@@ -1058,17 +1082,18 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
                 </div>
                 <div>
                   <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", color: "#0D1117", lineHeight: 1.2 }}>{companyName}</h1>
-                  <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{chineseName}</p>
+                  {chineseName && <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{chineseName}</p>}
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" as const, marginBottom: 10 }}>
-                <Mono color="#6B7280">{factory.industry}</Mono>
+                <Mono color="#6B7280">{primaryIndustry}</Mono>
+                {secondaryCategories.map((category) => <span key={category} style={{ padding: "2px 7px", borderRadius: 4, background: "#F7F8FA", border: "1px solid #E9ECF1", fontSize: 11, color: "#6B7280" }}>{category}</span>)}
                 <span style={{ width: 1, height: 12, background: "#E5E7EB" }} />
-                <Mono color="#6B7280">{String(profile?.district ?? d.district)}, {factory.city}, {factory.province}, China</Mono>
+                <Mono color="#6B7280">{[profile?.district, factory.city, factory.province, "China"].filter(Boolean).map(String).join(", ")}</Mono>
                 <span style={{ width: 1, height: 12, background: "#E5E7EB" }} />
                 <Mono color="#9CA3AF">Est. {String(profile?.established_year ?? factory.established)}</Mono>
                 <span style={{ width: 1, height: 12, background: "#E5E7EB" }} />
-                <Mono color="#9CA3AF">{d.id}</Mono>
+                <Mono color="#9CA3AF">{factory.id}</Mono>
               </div>
               <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const }}>
                 <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 4, background: "#ECFDF5", border: "1px solid #6EE7B7", fontSize: 10, fontWeight: 600, color: "#047857" }}>{supplierTypeLabel(supplierType)}</span>
@@ -1106,7 +1131,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
               <p style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 20 }}>{overview}</p>
               <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 0, border: "1px solid #E9ECF1", borderRadius: 8, overflow: "hidden" }}>
                 {overviewStats.map(({ label, value, verified }, i) => (
-                  <div key={label} style={{ padding: "12px 16px", borderRight: i % 3 < 2 ? "1px solid #E9ECF1" : undefined, borderBottom: i < 3 ? "1px solid #E9ECF1" : undefined }}>
+                  <div key={label} style={{ padding: "12px 16px", borderRight: i % 3 < 2 ? "1px solid #E9ECF1" : undefined, borderBottom: i < overviewStats.length - 3 ? "1px solid #E9ECF1" : undefined }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
                       <FieldLabel>{label}</FieldLabel>
                       {!verified && (
@@ -1168,7 +1193,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
                   Certifications are shown when verified or supported by reviewed evidence. Unverified items are labeled as mentioned only.
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {[["Trade Terms", Array.isArray(profile?.trade_terms) ? profile.trade_terms.map(String).join(", ") : d.tradeTerms], ["Min. Order", String(profile?.moq ?? d.minOrder)]].map(([k, v]) => (
+                  {[["Trade Terms", Array.isArray(profile?.trade_terms) && profile.trade_terms.length ? profile.trade_terms.map(String).join(", ") : "Not disclosed"], ["Min. Order", String(profile?.moq ?? "Not disclosed")]].map(([k, v]) => (
                     <div key={k as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <FieldLabel>{k}</FieldLabel>
                       <span style={{ fontSize: 12.5, fontWeight: 500, color: "#374151" }}>{v}</span>
@@ -1212,12 +1237,12 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
                 <span style={{ width: 1, height: 30, background: "#E9ECF1" }} />
                 <div>
                   <FieldLabel>Method</FieldLabel>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: "#374151", marginTop: 2 }}>{d.verificationMethod}</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "#374151", marginTop: 2 }}>Recorded in the verification record</p>
                 </div>
                 <span style={{ width: 1, height: 30, background: "#E9ECF1" }} />
                 <div>
                   <FieldLabel>Record ID</FieldLabel>
-                  <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 12, fontWeight: 500, color: "#1E40AF", marginTop: 2 }}>{d.id}</p>
+                  <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 12, fontWeight: 500, color: "#1E40AF", marginTop: 2 }}>{factory.id}</p>
                 </div>
               </div>
             </div>
@@ -1295,8 +1320,9 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
             <FieldLabel>About this record</FieldLabel>
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 7 }}>
               {[
-                ["Record ID", d.id],
-                ["Industry", factory.industry],
+                ["Record ID", factory.id],
+                ["Primary Industry", primaryIndustry],
+                ["Secondary Category", secondaryCategories.join(", ") || "—"],
                 ["Province", factory.province],
                 ["Last Verified", factory.verifiedDate],
               ].map(([k, v]) => (
@@ -1315,37 +1341,9 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
 
 // ─── Industries Page ──────────────────────────────────────────────────────────
 
-const INDUSTRY_CARDS_RICH = [
-  { code: "LED", name: "LED Lighting", desc: "Bulbs, panels, strip lights, commercial fixtures, and outdoor lighting.", chips: ["LED bulbs", "LED panels", "Strip lights"], region: "Guangdong · Zhejiang" },
-  { code: "PKG", name: "Cosmetic Packaging", desc: "Skincare jars, tubes, bottles, folding boxes, and custom labels.", chips: ["Jars", "Tubes", "Boxes"], region: "Guangdong · Shanghai" },
-  { code: "PPR", name: "Paper Boxes", desc: "Corrugated boxes, folding cartons, gift boxes, and kraft packaging.", chips: ["Corrugated", "Folding cartons", "Gift boxes"], region: "Guangdong · Zhejiang" },
-  { code: "PLS", name: "Plastic Bottles", desc: "PET, HDPE, and specialty plastic containers for cosmetics and food.", chips: ["PET bottles", "HDPE", "Spray bottles"], region: "Guangdong · Zhejiang" },
-  { code: "FRN", name: "Furniture", desc: "Residential, office, and contract furniture from verified manufacturers.", chips: ["Office chairs", "Dining tables", "Shelving"], region: "Guangdong · Fujian" },
-  { code: "KIT", name: "Kitchenware", desc: "Cookware, bakeware, kitchen tools, and tableware.", chips: ["Cookware", "Bakeware", "Kitchen tools"], region: "Guangdong · Zhejiang" },
-  { code: "PET", name: "Pet Products", desc: "Pet toys, beds, grooming supplies, apparel, and accessories.", chips: ["Pet toys", "Pet beds", "Grooming"], region: "Guangdong · Hebei" },
-  { code: "SPT", name: "Sports Goods", desc: "Fitness equipment, outdoor gear, and recreational accessories.", chips: ["Fitness equipment", "Outdoor gear", "Accessories"], region: "Hebei · Guangdong" },
-  { code: "ELC", name: "Electronics", desc: "Consumer electronics, components, and electronic accessories.", chips: ["Consumer electronics", "Components", "Accessories"], region: "Guangdong · Jiangsu" },
-  { code: "TEX", name: "Home Textiles", desc: "Bedding, towels, curtains, cushions, and soft furnishings.", chips: ["Bedding", "Towels", "Curtains"], region: "Zhejiang · Jiangsu" },
-];
+const INDUSTRY_CARDS_RICH = PRIMARY_INDUSTRIES.map((industry) => ({ code: industry.code, name: industry.name, slug: industry.slug, desc: industry.description, chips: industry.secondaryCategories.slice(0, 5).map((category) => category.name), supplierTypes: industry.supplierTypes, moqFit: industry.moqFit }));
 
-const INDUSTRY_GROUPS = [
-  {
-    group: "Packaging",
-    items: ["Cosmetic Packaging", "Paper Boxes", "Plastic Bottles", "Labels & Stickers", "Flexible Packaging"],
-  },
-  {
-    group: "Lighting & Electronics",
-    items: ["LED Lighting", "Electronics", "Consumer Electronics", "Electrical Components"],
-  },
-  {
-    group: "Home & Lifestyle",
-    items: ["Furniture", "Kitchenware", "Home Textiles", "Pet Products", "Sports Goods"],
-  },
-  {
-    group: "Industrial & Components",
-    items: ["Metal Parts", "Plastic Products", "Machinery Parts", "Molds & Tooling"],
-  },
-];
+const INDUSTRY_GROUPS = PRIMARY_INDUSTRIES.map((industry) => ({ group: industry.name, items: industry.secondaryCategories.map((category) => category.name) }));
 
 function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; onNav?: (k: string) => void }) {
   const [searchVal, setSearchVal] = useState("");
@@ -1354,10 +1352,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
 
   const filteredCards = activeGroup === "All"
     ? INDUSTRY_CARDS_RICH
-    : INDUSTRY_CARDS_RICH.filter((c) => {
-        const group = INDUSTRY_GROUPS.find((g) => g.group === activeGroup);
-        return group?.items.some((item) => item.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(item.toLowerCase()));
-      });
+    : INDUSTRY_CARDS_RICH.filter((category) => category.name === activeGroup);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F7F8FA" }}>
@@ -1366,7 +1361,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
       <section style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 32px 36px" }}>
           <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 10 }}>
-            China Factory Industries
+            China Supplier Industries
           </p>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, flexWrap: "wrap" as const }}>
             <div>
@@ -1454,13 +1449,8 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
                 ))}
               </div>
 
-              {/* Footer row: region + verified note */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #F5F6F8" }}>
-                <span style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, color: "#9CA3AF" }}>{cat.region}</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, color: "#10B981", fontWeight: 500 }}>
-                  <CheckIcon size={9} />Verified records only
-                </span>
-              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, paddingTop: 10, borderTop: "1px solid #F5F6F8" }}><div><FieldLabel>Supplier types</FieldLabel><p style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>{cat.supplierTypes}</p></div><div><FieldLabel>MOQ fit</FieldLabel><p style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>{cat.moqFit}</p></div></div>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, color: "#1E40AF", fontWeight: 600, marginTop: 12 }}>View Suppliers <ChevronRight size={10} /></span>
             </a>
           ))}
         </div>
@@ -1469,10 +1459,10 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
       {/* All Industry Groups */}
       <section style={{ background: "#fff", borderTop: "1px solid #E9ECF1", borderBottom: "1px solid #E9ECF1" }}>
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "44px 32px" }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px", color: "#0D1117", marginBottom: 28 }}>All Industry Groups</h2>
-          <div className="r4" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 0 }}>
-            {INDUSTRY_GROUPS.map(({ group, items }, gi) => (
-              <div key={group} style={{ paddingRight: gi < 3 ? 36 : 0, borderRight: gi < 3 ? "1px solid #F0F1F3" : "none", paddingLeft: gi > 0 ? 36 : 0 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px", color: "#0D1117", marginBottom: 28 }}>Secondary Categories by Primary Industry</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 28 }}>
+            {INDUSTRY_GROUPS.map(({ group, items }) => (
+              <div key={group}>
                 <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#1E40AF", marginBottom: 14 }}>{group}</p>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {items.map((item, ii) => (
@@ -1500,7 +1490,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
-            <button onClick={() => onNav?.("Request Verification")} style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Request Factory Research</button>
+            <button onClick={() => onNav?.("Request Verification")} style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", cursor: "pointer" }}>Request Supplier Research</button>
           </div>
         </div>
       </section>
@@ -1508,7 +1498,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
       {/* SEO section */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px 52px" }}>
         <div style={{ borderTop: "1px solid #E9ECF1", paddingTop: 28 }}>
-          <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#C4C9D4", marginBottom: 8 }}>Verified China Manufacturer Categories</p>
+          <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#C4C9D4", marginBottom: 8 }}>Verified China Supplier Categories</p>
           <p style={{ fontSize: 12.5, color: "#C4C9D4", lineHeight: 1.75, maxWidth: 720 }}>
             FactoryRoster organizes China supplier records by industry, product category, province, supplier type, MOQ fit, and supply model. Published supplier profiles pass Government Registration, Business Contact, and supplier-type Supply Evidence checks before being listed. FactoryRoster is not a marketplace and does not participate in buyer-supplier transactions.
           </p>
@@ -3285,9 +3275,12 @@ function pageFromPath(path: string): Page {
   return { kind: "not-found" };
 }
 
-export default function App({ initialPath = "/" }: { initialPath?: string }) {
+export default function App({ initialPath = "/", initialSupplier }: { initialPath?: string; initialSupplier?: Record<string, unknown> }) {
   const router = useRouter();
-  const [page, setPage] = useState<Page>(() => pageFromPath(initialPath));
+  const [page, setPage] = useState<Page>(() => {
+    const initialPage = pageFromPath(initialPath);
+    return initialPage.kind === "detail" && initialSupplier ? { ...initialPage, factory: apiFactoryToResult(initialSupplier) } : initialPage;
+  });
 
   useEffect(() => {
     const handlePopState = () => setPage(pageFromPath(`${window.location.pathname}${window.location.search}`));

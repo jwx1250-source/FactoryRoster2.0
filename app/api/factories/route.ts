@@ -6,7 +6,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const searchSchema = z.object({
   q: z.string().trim().max(120).optional(),
-  industry: z.string().trim().max(80).optional(),
+  industry: z.string().trim().max(100).optional(),
+  primary_industry: z.string().trim().max(100).optional(),
+  secondary_category: z.string().trim().max(140).optional(),
   province: z.string().trim().max(80).optional(),
   supplier_type: z.enum(["manufacturer", "authorized_distributor", "first_tier_agent", "trading_company", "exporter", "wholesaler", "brand_owner", "sourcing_service_provider"]).optional(),
   moq_level: z.enum(["sample_supported", "low_moq", "standard_moq", "bulk_only", "unknown"]).optional(),
@@ -25,7 +27,8 @@ export async function GET(request: Request) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.rpc("search_verified_suppliers", {
       p_query: input.q || null,
-      p_industry_slug: input.industry || null,
+      p_primary_industry_slug: input.primary_industry || input.industry || null,
+      p_secondary_category_slug: input.secondary_category || null,
       p_province: input.province || null,
       p_supplier_type: input.supplier_type || null,
       p_moq_level: input.moq_level || null,
