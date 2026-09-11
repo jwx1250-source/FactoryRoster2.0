@@ -102,7 +102,7 @@ function LogoWordmark({ size = 28 }: { size?: number }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-end", gap: 9 }}>
       <LogoMark size={size} />
-      <span style={{ fontSize: size * 0.62, fontWeight: 700, letterSpacing: "-0.5px", color: "#0D1117", lineHeight: 1, marginBottom: 5 }}>
+      <span style={{ fontSize: size * 0.67, fontWeight: 700, letterSpacing: "-0.5px", color: "#0D1117", lineHeight: 1, marginBottom: 5 }}>
         FactoryRoster
       </span>
     </div>
@@ -398,7 +398,7 @@ function Hero({ onSearch }: { onSearch: (q: string) => void }) {
         <p style={{ fontSize: 16, fontWeight: 400, color: "#6B7280", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 40px" }}>
           Search verified China manufacturers, distributors, exporters, and wholesalers before you reach out.
         </p>
-        <div style={{ display: "flex", alignItems: "center", background: "#fff", border: "1.5px solid #D1D5DB", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.04)", overflow: "hidden", transition: "border-color 0.15s" }}
+        <div className="hero-search-box" style={{ display: "flex", alignItems: "center", background: "#fff", border: "1.5px solid #D1D5DB", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.04)", overflow: "hidden", transition: "border-color 0.15s" }}
           onFocusCapture={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#1E40AF"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 3px rgba(30,64,175,0.08)"; }}
           onBlurCapture={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#D1D5DB"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.04),0 4px 16px rgba(0,0,0,0.04)"; }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, padding: "0 18px" }}>
@@ -430,8 +430,8 @@ function Hero({ onSearch }: { onSearch: (q: string) => void }) {
 function Industries({ onSearch }: { onSearch: (q: string) => void }) {
   return (
     <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 32px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+      <div className="section-heading-row" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
+        <div className="section-heading-copy" style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117" }}>Popular Verified Industries</h2>
           <Mono color="#9CA3AF">Every listed supplier has passed our verification checks</Mono>
         </div>
@@ -515,8 +515,8 @@ function RecentRecords({ onDetail }: { onDetail: (f: SearchResult) => void }) {
   }, []);
   return (
     <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 32px" }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+      <div className="section-heading-row" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
+        <div className="section-heading-copy" style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117" }}>Recently Verified</h2>
           <Mono color="#9CA3AF">Published records only</Mono>
         </div>
@@ -862,11 +862,11 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
       style={{ background: "#fff", border: `1px solid ${hovered ? "#DBEAFE" : "#E9ECF1"}`, borderRadius: 10, padding: "20px 22px", transition: "border-color 0.15s, box-shadow 0.15s", boxShadow: hovered ? "0 2px 10px rgba(30,64,175,0.05)" : "none" }}>
 
       {/* Row 1: name + actions */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 10 }}>
+      <div className="result-card-heading" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 10 }}>
         <div>
           <span style={{ fontSize: 15, fontWeight: 700, color: "#0D1117", letterSpacing: "-0.2px", lineHeight: 1.3 }}>{r.name}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        <div className="result-actions" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <button onClick={() => onDetail(r)}
             style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 6, border: "1px solid #DBEAFE", background: "#EFF3FF", fontSize: 12.5, fontWeight: 600, color: "#1E40AF", cursor: "pointer" }}>
             View Supplier <ArrowRight />
@@ -898,7 +898,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
       </div>
 
       {/* Row 3: products */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+      <div className="result-products" style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
         <FieldLabel>Products</FieldLabel>
         <span style={{ width: 1, height: 10, background: "#E5E7EB" }} />
         <span style={{ fontSize: 12.5, color: "#6B7280" }}>{r.mainProducts.join("  ·  ")}</span>
@@ -908,7 +908,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
 
       {/* Row 4: verification + contact preview */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="verification-meta" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ display: "flex", gap: 5 }}>
             <VerifiedBadge label="Gov. Registration" />
             <VerifiedBadge label="Business Contact" />
@@ -921,7 +921,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
         </div>
 
         {/* Locked contact preview */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 6, background: "#F7F8FA", border: "1px solid #E9ECF1" }}>
+        <div className="locked-contact-preview" style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 6, background: "#F7F8FA", border: "1px solid #E9ECF1" }}>
           <span style={{ color: "#9CA3AF" }}><LockIcon /></span>
           <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Locked contact intelligence:</span>
           <Mono color="#9CA3AF">Phone · Email · Contact person</Mono>
