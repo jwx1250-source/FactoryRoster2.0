@@ -2,8 +2,24 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+let recoveryClient: ReturnType<typeof createClient> | undefined;
+
+function createRecoveryClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Supabase is not configured");
+  recoveryClient ??= createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: true,
+      flowType: "implicit",
+      persistSession: false,
+    },
+  });
+  return recoveryClient;
+}
 
 const fieldStyle = {
   width: "100%",
@@ -92,8 +108,8 @@ export function UpdatePasswordForm() {
 
   useEffect(() => {
     let active = true;
-    const supabase = createSupabaseBrowserClient();
     async function checkRecoverySession() {
+      const supabase = createRecoveryClient();
       const result = await supabase.auth.getUser();
       if (!active) return;
       setHasSession(Boolean(result.data.user));
@@ -110,7 +126,7 @@ export function UpdatePasswordForm() {
     if (password !== confirmPassword) return setError("Passwords do not match.");
     setBusy(true);
     try {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createRecoveryClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
       setComplete(true);
@@ -133,7 +149,7 @@ export function UpdatePasswordForm() {
       ) : complete ? (
         <div>
           <p role="status" style={{ color: "#166534", background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, fontSize: 13, lineHeight: 1.5, padding: 12 }}>Your password has been updated successfully.</p>
-          <Link href="/dashboard" style={{ display: "block", textAlign: "center", color: "#1E40AF", fontSize: 13, fontWeight: 600, textDecoration: "none", marginTop: 18 }}>Continue to dashboard</Link>
+          <Link href="/sign-in" style={{ display: "block", textAlign: "center", color: "#1E40AF", fontSize: 13, fontWeight: 600, textDecoration: "none", marginTop: 18 }}>Sign in with your new password</Link>
         </div>
       ) : (
         <form onSubmit={submit}>
