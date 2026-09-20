@@ -2528,7 +2528,7 @@ function SignInPage({ onSignUp, onHome, onNav }: { onSignUp: () => void; onHome:
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <FieldLabel>Password</FieldLabel>
-                <span style={{ fontSize: 12, color: "#9CA3AF" }}>Password reset coming soon</span>
+                <button type="button" onClick={() => router.push("/forgot-password")} style={{ padding: 0, border: "none", background: "transparent", fontSize: 12, color: "#1E40AF", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Forgot password?</button>
               </div>
               <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••"
                 style={{ width: "100%", marginTop: 5, padding: "9px 13px", borderRadius: 8, border: "1.5px solid #E9ECF1", fontSize: 14, color: "#0D1117", background: "#fff", outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" }}
