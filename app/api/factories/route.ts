@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { unstable_cache } from "next/cache";
 
 import { apiError } from "@/lib/http";
 import { contactPreview } from "@/lib/domain/rules";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const searchSchema = z.object({
   q: z.string().trim().max(120).optional(),
@@ -24,28 +25,56 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const input = searchSchema.parse(Object.fromEntries(url.searchParams));
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase.rpc("search_verified_suppliers", {
-      p_query: input.q || null,
-      p_primary_industry_slug: input.primary_industry || input.industry || null,
-      p_secondary_category_slug: input.secondary_category || null,
-      p_province: input.province || null,
-      p_supplier_type: input.supplier_type || null,
-      p_moq_level: input.moq_level || null,
-      p_supports_small_orders: input.small_orders ? true : null,
-      p_supports_sample_orders: input.sample_orders ? true : null,
-      p_supports_private_label: input.private_label ? true : null,
-      p_supply_model: input.supply_model || null,
-      p_limit: input.limit,
-      p_offset: (input.page - 1) * input.limit,
-    });
-    if (error) throw error;
+    // Search results contain only published, non-sensitive fields. A short
+    // server cache avoids repeating the same RPC while keeping publication
+    // changes visible quickly.
+    const getResults = unstable_cache(
+      async () => {
+        const supabase = createSupabaseAdminClient();
+        const { data, error } = await supabase.rpc("search_verified_suppliers", {
+          p_query: input.q || null,
+          p_primary_industry_slug: input.primary_industry || input.industry || null,
+          p_secondary_category_slug: input.secondary_category || null,
+          p_province: input.province || null,
+          p_supplier_type: input.supplier_type || null,
+          p_moq_level: input.moq_level || null,
+          p_supports_small_orders: input.small_orders ? true : null,
+          p_supports_sample_orders: input.sample_orders ? true : null,
+          p_supports_private_label: input.private_label ? true : null,
+          p_supply_model: input.supply_model || null,
+          p_limit: input.limit,
+          p_offset: (input.page - 1) * input.limit,
+        });
+        if (error) throw error;
+        return data ?? [];
+      },
+      [
+        "public-supplier-search",
+        input.q ?? "",
+        input.primary_industry ?? input.industry ?? "",
+        input.secondary_category ?? "",
+        input.province ?? "",
+        input.supplier_type ?? "",
+        input.moq_level ?? "",
+        input.small_orders ?? "",
+        input.sample_orders ?? "",
+        input.private_label ?? "",
+        input.supply_model ?? "",
+        String(input.page),
+        String(input.limit),
+      ],
+      { revalidate: 30, tags: ["public-suppliers"] },
+    );
+    const data = await getResults();
 
     const suppliers = (data ?? []).map((supplier: Record<string, unknown>) => ({
       ...supplier,
       contact: contactPreview(Boolean(supplier.has_verified_contact)),
     }));
-    return Response.json({ suppliers, factories: suppliers, page: input.page, limit: input.limit, hasMore: suppliers.length === input.limit });
+    return Response.json(
+      { suppliers, factories: suppliers, page: input.page, limit: input.limit, hasMore: suppliers.length === input.limit },
+      { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } },
+    );
   } catch (error) {
     return apiError(error);
   }

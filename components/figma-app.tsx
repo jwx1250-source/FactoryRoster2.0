@@ -705,7 +705,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ limit: "50" });
+    const params = new URLSearchParams({ limit: "24" });
     if (query.trim()) params.set("q", query.trim());
     if (activeProvince) params.set("province", activeProvince);
     if (primaryIndustry) params.set("primary_industry", primaryIndustry);
