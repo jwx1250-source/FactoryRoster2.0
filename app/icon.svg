@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="FactoryRoster">
+  <path d="M16 3 30 13v17H2V13z" fill="#1e40af"/>
+  <path d="M6 17h14M6 21h10M6 25h6" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="1.8" opacity=".9"/>
+  <path d="m22 23 3 3.5 5-7" fill="none" stroke="#10b981" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"/>
+</svg>

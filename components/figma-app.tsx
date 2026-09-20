@@ -308,6 +308,7 @@ function HamburgerIcon({ open }: { open: boolean }) {
 
 function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (k: string) => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navHref: Record<string, string> = { Industries: "/industries", Verification: "/verification", Pricing: "/pricing", Guides: "/guides", "Sign In": "/sign-in", "Get Started": "/get-started" };
 
   const activeItem =
     page.kind === "industries" ? "Industries"
@@ -322,16 +323,16 @@ function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (
     <>
       <header style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(8px)", borderBottom: "1px solid #E9ECF1" }}>
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 20px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); onHome(); setMobileOpen(false); }} style={{ textDecoration: "none" }}>
+          <Link href="/" onClick={(e) => { e.preventDefault(); onHome(); setMobileOpen(false); }} style={{ textDecoration: "none" }}>
             <LogoWordmark size={30} />
-          </a>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 28 }}>
             {["Industries", "Verification", "Pricing", "Guides"].map((item) => {
               const active = item === activeItem;
               return (
-                <a key={item} href="#" onClick={(e) => { e.preventDefault(); onNav(item); }}
+                <a key={item} href={navHref[item]} onClick={(e) => { e.preventDefault(); onNav(item); }}
                   style={{ fontSize: 13.5, fontWeight: active ? 600 : 500, color: active ? "#0D1117" : "#6B7280", textDecoration: "none", position: "relative" }}
                   onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#0D1117")}
                   onMouseLeave={(e) => { if (!active) (e.target as HTMLAnchorElement).style.color = "#6B7280"; }}>
@@ -344,8 +345,8 @@ function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (
 
           {/* Desktop auth */}
           <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); onNav("Sign In"); }} style={{ fontSize: 13.5, fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>Sign In</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); onNav("Get Started"); }} style={{ padding: "7px 16px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, textDecoration: "none", letterSpacing: "-0.1px" }}>Get Started</a>
+            <Link href="/sign-in" onClick={(e) => { e.preventDefault(); onNav("Sign In"); }} style={{ fontSize: 13.5, fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>Sign In</Link>
+            <Link href="/get-started" onClick={(e) => { e.preventDefault(); onNav("Get Started"); }} style={{ padding: "7px 16px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, textDecoration: "none", letterSpacing: "-0.1px" }}>Get Started</Link>
           </div>
 
           {/* Mobile hamburger */}
@@ -439,7 +440,7 @@ function Industries({ onSearch }: { onSearch: (q: string) => void }) {
       </div>
       <div className="r2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
         {CATEGORIES.map((cat) => (
-          <a key={cat.name} href="#" onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
+          <a key={cat.name} href={`/search?q=${encodeURIComponent(cat.name)}`} onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
             style={{ display: "flex", flexDirection: "column", gap: 0, padding: "20px", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none", background: "#fff", transition: "border-color 0.15s,box-shadow 0.15s" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#1E40AF"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 14px rgba(30,64,175,0.08)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none"; }}>
@@ -529,7 +530,7 @@ function RecentRecords({ onDetail }: { onDetail: (f: SearchResult) => void }) {
           {["Supplier Name", "Industry", "Location", "Record ID", "Verified"].map((col) => (<FieldLabel key={col}>{col}</FieldLabel>))}
         </div>
         {records.map((f, i) => (
-          <a key={f.id} href="#" onClick={(e) => { e.preventDefault(); onDetail(f); }}
+          <a key={f.id} href={`/factories/${f.slug}`} onClick={(e) => { e.preventDefault(); onDetail(f); }}
             style={{ minWidth: 600, display: "grid", gridTemplateColumns: "1fr 140px 140px 130px 110px", padding: "14px 20px", borderBottom: i < records.length - 1 ? "1px solid #F0F1F3" : undefined, textDecoration: "none", background: "#fff", alignItems: "center", transition: "background 0.1s" }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#FAFBFC")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#fff")}>
@@ -588,6 +589,7 @@ function HowItWorks() {
 
 function Footer({ onNav }: { onNav?: (k: string) => void }) {
   const go = (k: string) => (e: React.MouseEvent) => { e.preventDefault(); onNav?.(k); };
+  const navHref: Record<string, string> = { Home: "/", Industries: "/industries", Verification: "/verification", Pricing: "/pricing", Guides: "/guides", "Request Verification": "/request-verification", About: "/about", Contact: "/contact", Privacy: "/privacy-policy", Terms: "/terms" };
   const cols: { heading: string; items: { label: string; nav: string }[] }[] = [
     {
       heading: "Product",
@@ -634,7 +636,7 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
               <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#6B7280", marginBottom: 14 }}>{heading}</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
                 {items.map(({ label, nav }) => (
-                  <li key={label}><a href="#" onClick={go(nav)} style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none" }}
+                  <li key={label}><a href={navHref[nav] ?? "/"} onClick={go(nav)} style={{ fontSize: 13, color: "#9CA3AF", textDecoration: "none" }}
                     onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#374151")}
                     onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#9CA3AF")}>{label}</a></li>
                 ))}
@@ -1427,7 +1429,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(268px,1fr))", gap: 10 }}>
           {filteredCards.map((cat) => (
-            <a key={cat.name} href="#" onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
+            <a key={cat.name} href={`/search?q=${encodeURIComponent(cat.name)}`} onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
               style={{ display: "flex", flexDirection: "column", padding: "18px 20px", background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#BFCDEE"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 2px 12px rgba(30,64,175,0.06)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none"; }}>
@@ -1466,7 +1468,7 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
                 <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#1E40AF", marginBottom: 14 }}>{group}</p>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {items.map((item, ii) => (
-                    <a key={item} href="#" onClick={(e) => { e.preventDefault(); onSearch(item); }}
+                    <a key={item} href={`/search?q=${encodeURIComponent(item)}`} onClick={(e) => { e.preventDefault(); onSearch(item); }}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", fontSize: 13.5, fontWeight: 400, color: "#374151", textDecoration: "none", borderBottom: ii < items.length - 1 ? "1px solid #F7F8FA" : "none" }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#1E40AF"; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#374151"; }}>
@@ -2305,7 +2307,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
               <h2 style={{ fontSize: 15.5, fontWeight: 700, letterSpacing: "-0.2px", color: "#0D1117", marginBottom: 14 }}>Featured Guides</h2>
               <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                 {FEATURED_GUIDES.map((g) => (
-                  <a key={g.title} href="#" onClick={(e) => e.preventDefault()}
+                  <article key={g.title}
                     style={{ display: "flex", flexDirection: "column", padding: "18px 20px", background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#BFCDEE"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 2px 10px rgba(30,64,175,0.06)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none"; }}>
@@ -2321,7 +2323,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
                       <Mono color="#C4C9D4">{g.read}</Mono>
                       <span style={{ fontSize: 12.5, fontWeight: 600, color: "#1E40AF", display: "flex", alignItems: "center", gap: 4 }}>Read guide <ArrowRight /></span>
                     </div>
-                  </a>
+                  </article>
                 ))}
               </div>
             </div>
@@ -2336,7 +2338,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
               </div>
               <div className="r2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {INDUSTRY_GUIDES_LIST.map((g) => (
-                  <a key={g.name} href="#" onClick={(e) => e.preventDefault()}
+                  <article key={g.name}
                     style={{ display: "flex", flexDirection: "column", padding: "16px 18px", background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#BFCDEE"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; }}>
@@ -2347,7 +2349,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
                     <p style={{ fontSize: 13, fontWeight: 700, color: "#0D1117", lineHeight: 1.35, marginBottom: 5, letterSpacing: "-0.2px" }}>China {g.name} Manufacturers: Buyer Guide</p>
                     <p style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.6, flex: 1, marginBottom: 11 }}>{g.desc}</p>
                     <span style={{ fontSize: 12, fontWeight: 600, color: "#1E40AF", display: "flex", alignItems: "center", gap: 3 }}>Read guide <ArrowRight /></span>
-                  </a>
+                  </article>
                 ))}
               </div>
             </div>
@@ -2367,7 +2369,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
             : (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {filtered.map((g) => (
-                  <a key={g.title} href="#" onClick={(e) => e.preventDefault()}
+                  <article key={g.title}
                     style={{ display: "flex", flexDirection: "column", padding: "16px 18px", background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#BFCDEE"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; }}>
@@ -2384,7 +2386,7 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
                       </span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: "#1E40AF", display: "flex", alignItems: "center", gap: 3 }}>Read <ArrowRight /></span>
                     </div>
-                  </a>
+                  </article>
                 ))}
               </div>
             )
@@ -2400,14 +2402,14 @@ function GuidesPage({ onSearch, onVerification, onIndustries, onNav }: { onSearc
           <h2 style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.3px", color: "#0D1117", marginBottom: 20 }}>Popular Industry Guides</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(196px,1fr))", gap: 9 }}>
             {INDUSTRY_GUIDES_LIST.map((g) => (
-              <a key={g.name} href="#" onClick={(e) => e.preventDefault()}
+              <article key={g.name}
                 style={{ display: "flex", flexDirection: "column", gap: 5, padding: "14px 16px", background: "#F7F8FA", border: "1px solid #E9ECF1", borderRadius: 8, textDecoration: "none" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#BFCDEE"; (e.currentTarget as HTMLAnchorElement).style.background = "#fff"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.background = "#F7F8FA"; }}>
                 <p style={{ fontSize: 13, fontWeight: 700, color: "#0D1117" }}>{g.name}</p>
                 <p style={{ fontSize: 11.5, color: "#9CA3AF", lineHeight: 1.5 }}>{g.desc}</p>
                 <span style={{ fontSize: 11.5, fontWeight: 600, color: "#1E40AF", display: "flex", alignItems: "center", gap: 3, marginTop: 2 }}>View guide <ArrowRight /></span>
-              </a>
+              </article>
             ))}
           </div>
         </div>
@@ -2496,7 +2498,7 @@ function SignInPage({ onSignUp, onHome, onNav }: { onSignUp: () => void; onHome:
       <div style={{ width: "100%", maxWidth: 420 }}>
         {/* Logo */}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); onHome(); }} style={{ textDecoration: "none" }}><LogoWordmark size={30} /></a>
+          <Link href="/" onClick={(e) => { e.preventDefault(); onHome(); }} style={{ textDecoration: "none" }}><LogoWordmark size={30} /></Link>
         </div>
         {/* Card */}
         <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 14, padding: "36px 36px 28px", boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 8px 24px rgba(0,0,0,0.04)" }}>
@@ -2541,7 +2543,7 @@ function SignInPage({ onSignUp, onHome, onNav }: { onSignUp: () => void; onHome:
 
           <p style={{ textAlign: "center", fontSize: 13, color: "#9CA3AF" }}>
             New to FactoryRoster?{" "}
-            <a href="#" onClick={(e) => { e.preventDefault(); onSignUp(); }} style={{ color: "#1E40AF", fontWeight: 600, textDecoration: "none" }}>Get started</a>
+            <Link href="/get-started" onClick={(e) => { e.preventDefault(); onSignUp(); }} style={{ color: "#1E40AF", fontWeight: 600, textDecoration: "none" }}>Get started</Link>
           </p>
         </div>
 
@@ -2553,7 +2555,7 @@ function SignInPage({ onSignUp, onHome, onNav }: { onSignUp: () => void; onHome:
         {/* Footer links */}
         <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 16 }}>
           {[["Privacy", "Privacy"], ["Terms", "Terms"], ["Contact", "Contact"]].map(([label, nav]) => (
-            <a key={label} href="#" onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12, color: "#C4C9D4", textDecoration: "none" }}
+            <a key={label} href={nav === "Privacy" ? "/privacy-policy" : nav === "Terms" ? "/terms" : "/contact"} onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12, color: "#C4C9D4", textDecoration: "none" }}
               onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#9CA3AF")}
               onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#C4C9D4")}>{label}</a>
           ))}
@@ -2634,7 +2636,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
         <div style={{ width: "100%", maxWidth: 440 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-            <a href="#" onClick={(e) => { e.preventDefault(); onHome(); }} style={{ textDecoration: "none" }}><LogoWordmark size={28} /></a>
+            <Link href="/" onClick={(e) => { e.preventDefault(); onHome(); }} style={{ textDecoration: "none" }}><LogoWordmark size={28} /></Link>
           </div>
           <div style={{ background: "#fff", border: "1px solid #E9ECF1", borderRadius: 14, padding: "32px 32px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.04),0 8px 24px rgba(0,0,0,0.04)" }}>
             <h2 style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 4, textAlign: "center" }}>Create your account</h2>
@@ -2679,7 +2681,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
 
             <p style={{ textAlign: "center", fontSize: 12.5, color: "#9CA3AF" }}>
               Already have an account?{" "}
-              <a href="#" onClick={(e) => { e.preventDefault(); onSignIn(); }} style={{ color: "#1E40AF", fontWeight: 600, textDecoration: "none" }}>Sign in</a>
+              <Link href="/sign-in" onClick={(e) => { e.preventDefault(); onSignIn(); }} style={{ color: "#1E40AF", fontWeight: 600, textDecoration: "none" }}>Sign in</Link>
             </p>
           </div>
           <p style={{ textAlign: "center", fontSize: 11.5, color: "#C4C9D4", marginTop: 16, lineHeight: 1.6 }}>
@@ -2687,7 +2689,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 14 }}>
             {[["Privacy", "Privacy"], ["Terms", "Terms"], ["Contact", "Contact"]].map(([label, nav]) => (
-              <a key={label} href="#" onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12, color: "#C4C9D4", textDecoration: "none" }}
+              <a key={label} href={nav === "Privacy" ? "/privacy-policy" : nav === "Terms" ? "/terms" : "/contact"} onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12, color: "#C4C9D4", textDecoration: "none" }}
                 onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#9CA3AF")}
                 onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#C4C9D4")}>{label}</a>
             ))}
@@ -3199,7 +3201,7 @@ function LegalPage({ kind, onNav }: { kind: "privacy" | "terms"; onNav: (k: stri
           <Mono color="#C4C9D4">factoryroster.com</Mono>
           <div style={{ display: "flex", gap: 20 }}>
             {(isPrivacy ? [["Terms", "Terms"], ["Contact", "Contact"]] : [["Privacy", "Privacy"], ["Contact", "Contact"]]).map(([label, nav]) => (
-              <a key={label} href="#" onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12, color: "#9CA3AF", textDecoration: "none" }}>{label}</a>
+              <a key={label} href={nav === "Privacy" ? "/privacy-policy" : nav === "Terms" ? "/terms" : "/contact"} onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12, color: "#9CA3AF", textDecoration: "none" }}>{label}</a>
             ))}
           </div>
         </div>
@@ -3239,7 +3241,7 @@ function NotFoundPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string)
 
         <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
           {[["Verification", "Verification"], ["Pricing", "Pricing"], ["Contact", "Contact"]].map(([label, nav]) => (
-            <a key={label} href="#" onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12.5, color: "#9CA3AF", textDecoration: "none" }}
+              <a key={label} href={nav === "Verification" ? "/verification" : nav === "Pricing" ? "/pricing" : "/contact"} onClick={(e) => { e.preventDefault(); onNav(nav); }} style={{ fontSize: 12.5, color: "#9CA3AF", textDecoration: "none" }}
               onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#374151")}
               onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#9CA3AF")}>{label}</a>
           ))}

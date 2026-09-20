@@ -13,12 +13,24 @@ export const metadata: Metadata = {
     siteName: "FactoryRoster",
     type: "website",
   },
+  twitter: {
+    card: "summary",
+    title: "FactoryRoster — Verified China Suppliers",
+    description: "China Supplier Intelligence · Verified Before Listed",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            { "@type": "Organization", "@id": `${siteUrl}/#organization`, name: "FactoryRoster", url: siteUrl },
+            { "@type": "WebSite", "@id": `${siteUrl}/#website`, name: "FactoryRoster", url: siteUrl, publisher: { "@id": `${siteUrl}/#organization` }, potentialAction: { "@type": "SearchAction", target: `${siteUrl}/search?q={search_term_string}`, "query-input": "required name=search_term_string" } },
+          ],
+        }) }} />
         {children}
       </body>
     </html>

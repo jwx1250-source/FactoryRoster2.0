@@ -17,7 +17,7 @@ export async function GET(request: Request, context: RouteContext<"/api/admin/[r
 
     const url = new URL(request.url);
     const page = Math.max(Number(url.searchParams.get("page")) || 1, 1);
-    const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 50, 1), 100);
+    const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 50, 1), 1000);
     const from = (page - 1) * limit;
     const supabase = createSupabaseAdminClient();
     const selection = resource === "factories" ? "*,industries!factories_industry_id_fkey(name,slug),secondary_category:industries!factories_secondary_category_id_fkey(name,slug),verification_records(verification_type,status)" : "*";

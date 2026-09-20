@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import FigmaApp from "@/components/figma-app";
+import { siteUrl } from "@/lib/site";
 
 const pages = ["verification", "pricing", "guides", "sign-in", "get-started", "contact", "request-verification", "about", "privacy-policy", "terms"];
 const titles: Record<string, string> = {
@@ -22,7 +23,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  return { title: titles[slug] || "FactoryRoster" };
+  if (!pages.includes(slug)) return { title: "Page not found", robots: { index: false, follow: false } };
+  return { title: titles[slug] || "FactoryRoster", alternates: { canonical: `${siteUrl}/${slug}` } };
 }
 
 export default async function PublicPage({ params }: { params: Promise<{ slug: string }> }) {

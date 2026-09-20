@@ -32,6 +32,7 @@ export default function AdminFactoryList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [province, setProvince] = useState("all");
+  const [city, setCity] = useState("all");
   const [verification, setVerification] = useState("all");
   const [indexing, setIndexing] = useState("all");
   const [secondaryCategory, setSecondaryCategory] = useState("all");
@@ -46,7 +47,7 @@ export default function AdminFactoryList() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/factories?limit=100")
+    fetch("/api/admin/factories?limit=1000")
       .then(async (response) => {
         const body = await response.json();
         if (!response.ok) throw new Error(body.error || "Unable to load suppliers");
@@ -57,6 +58,7 @@ export default function AdminFactoryList() {
   }, []);
 
   const provinces = useMemo(() => [...new Set(rows.map((row) => row.province).filter(Boolean))].sort(), [rows]);
+  const cities = useMemo(() => [...new Set(rows.filter((row) => province === "all" || (province === "missing" ? !row.province?.trim() : row.province === province)).map((row) => row.city).filter(Boolean))].sort(), [province, rows]);
   const industries = useMemo(() => [...new Set(rows.map((row) => row.industries?.name).filter((value): value is string => Boolean(value)))].sort(), [rows]);
   const secondaryCategories = useMemo(() => [...new Set(rows.filter((row) => industry === "all" || row.industries?.name === industry).map((row) => row.secondary_category?.name).filter((value): value is string => Boolean(value)))].sort(), [industry, rows]);
   const filtered = useMemo(() => {
@@ -69,7 +71,8 @@ export default function AdminFactoryList() {
       const indexingMatches = indexing === "all" || (indexing === "indexable" ? row.is_indexable : !row.is_indexable);
       const booleanMatches = (filter: string, value: boolean) => filter === "all" || value === (filter === "yes");
       return (!query || haystack.includes(query)) && statusMatches && verificationMatches && indexingMatches
-        && (province === "all" || row.province === province)
+        && (province === "all" || (province === "missing" ? !row.province?.trim() : row.province === province))
+        && (city === "all" || (city === "missing" ? !row.city?.trim() : row.city === city))
         && (industry === "all" || row.industries?.name === industry)
         && (secondaryCategory === "all" || row.secondary_category?.name === secondaryCategory)
         && (supplierType === "all" || row.supplier_type === supplierType)
@@ -79,7 +82,7 @@ export default function AdminFactoryList() {
         && booleanMatches(smallOrders, row.supports_small_orders)
         && booleanMatches(privateLabel, row.supports_private_label);
     });
-  }, [rows, search, status, province, verification, indexing, industry, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel]);
+  }, [rows, search, status, province, city, verification, indexing, industry, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel]);
 
   const setPrimaryIndustry = (value: string) => { setIndustry(value); setSecondaryCategory("all"); };
   const yesNoOptions = <><option value="yes">Yes</option><option value="no">No</option></>;
@@ -98,7 +101,8 @@ export default function AdminFactoryList() {
     <div className="admin-filterbar">
       <input aria-label="Search suppliers" placeholder="Search name, record ID, city or product…" value={search} onChange={(event) => setSearch(event.target.value)} />
       <select aria-label="Publication status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">All statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
-      <select aria-label="Province" value={province} onChange={(event) => setProvince(event.target.value)}><option value="all">All provinces</option>{provinces.map((item) => <option key={item}>{item}</option>)}</select>
+      <select aria-label="Province" value={province} onChange={(event) => { setProvince(event.target.value); setCity("all"); }}><option value="all">All provinces</option><option value="missing">Province missing</option>{provinces.map((item) => <option key={item}>{item}</option>)}</select>
+      <select aria-label="City" value={city} onChange={(event) => setCity(event.target.value)}><option value="all">All cities</option><option value="missing">City missing</option>{cities.map((item) => <option key={item}>{item}</option>)}</select>
       <select aria-label="Primary Industry" value={industry} onChange={(event) => setPrimaryIndustry(event.target.value)}><option value="all">All primary industries</option>{industries.map((item) => <option key={item}>{item}</option>)}</select>
       <select aria-label="Secondary Category" value={secondaryCategory} onChange={(event) => setSecondaryCategory(event.target.value)}><option value="all">All secondary categories</option>{secondaryCategories.map((item) => <option key={item}>{item}</option>)}</select>
       <select aria-label="Supplier Type" value={supplierType} onChange={(event) => setSupplierType(event.target.value)}><option value="all">All supplier types</option><option value="manufacturer">Manufacturer</option><option value="authorized_distributor">Authorized Distributor</option><option value="first_tier_agent">First-tier Agent</option><option value="trading_company">Trading Supplier</option><option value="exporter">Exporter</option><option value="wholesaler">Wholesaler</option><option value="brand_owner">Brand Owner</option><option value="sourcing_service_provider">Sourcing Service Provider</option></select>

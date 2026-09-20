@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import FigmaApp from "@/components/figma-app";
+import { siteUrl } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Search Verified Suppliers", robots: { index: false, follow: true } };
+export const metadata: Metadata = { title: "Search Verified Suppliers", robots: { index: false, follow: true }, alternates: { canonical: `${siteUrl}/search` } };
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
