@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type FactoryRow = {
   id: string;
@@ -36,6 +36,26 @@ function matchesFilter(selected: string, actual: unknown) {
   return normalizedActual === normalizeFilterValue(selected);
 }
 
+const LIST_STATE_KEY = "factoryroster-admin-supplier-list-state";
+type ListState = {
+  search: string;
+  status: string;
+  province: string;
+  city: string;
+  verification: string;
+  indexing: string;
+  secondaryCategory: string;
+  supplierType: string;
+  supplyModel: string;
+  moqLevel: string;
+  sampleOrders: string;
+  smallOrders: string;
+  privateLabel: string;
+  industry: string;
+  scrollY: number;
+  editingId?: string;
+};
+
 export default function AdminFactoryList() {
   const [rows, setRows] = useState<FactoryRow[]>([]);
   const [search, setSearch] = useState("");
@@ -54,6 +74,38 @@ export default function AdminFactoryList() {
   const [industry, setIndustry] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const pendingRestore = useRef<{ scrollY: number; editingId?: string } | null>(null);
+
+  const getListState = (): ListState => ({ search, status, province, city, verification, indexing, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel, industry, scrollY: window.scrollY });
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(LIST_STATE_KEY);
+      if (!saved) return;
+      const state = JSON.parse(saved) as Partial<ListState>;
+      pendingRestore.current = { scrollY: Number(state.scrollY) || 0, editingId: state.editingId };
+      const restoreFilters = window.setTimeout(() => {
+        setSearch(state.search ?? "");
+        setStatus(state.status ?? "all");
+        setProvince(state.province ?? "all");
+        setCity(state.city ?? "all");
+        setVerification(state.verification ?? "all");
+        setIndexing(state.indexing ?? "all");
+        setSecondaryCategory(state.secondaryCategory ?? "all");
+        setSupplierType(state.supplierType ?? "all");
+        setSupplyModel(state.supplyModel ?? "all");
+        setMoqLevel(state.moqLevel ?? "all");
+        setSampleOrders(state.sampleOrders ?? "all");
+        setSmallOrders(state.smallOrders ?? "all");
+        setPrivateLabel(state.privateLabel ?? "all");
+        setIndustry(state.industry ?? "all");
+      }, 0);
+      return () => window.clearTimeout(restoreFilters);
+    } catch {
+      sessionStorage.removeItem(LIST_STATE_KEY);
+    }
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/factories?limit=1000")
@@ -65,6 +117,18 @@ export default function AdminFactoryList() {
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load suppliers"))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (loading || !pendingRestore.current) return;
+    const restore = pendingRestore.current;
+    pendingRestore.current = null;
+    if (restore.editingId) {
+      setHighlightedId(restore.editingId);
+      window.setTimeout(() => setHighlightedId(null), 4500);
+    }
+    window.requestAnimationFrame(() => window.scrollTo({ top: restore.scrollY, behavior: "auto" }));
+    sessionStorage.removeItem(LIST_STATE_KEY);
+  }, [loading]);
 
   const provinces = useMemo(() => [...new Set(rows.map((row) => row.province?.trim()).filter(Boolean))].sort(), [rows]);
   const cities = useMemo(() => [...new Set(rows.filter((row) => matchesFilter(province, row.province)).map((row) => row.city?.trim()).filter(Boolean))].sort(), [province, rows]);
@@ -125,7 +189,7 @@ export default function AdminFactoryList() {
       <div className="admin-notice">{filtered.length} shown / {rows.length} total</div>
     </div>
     <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Supplier</th><th>Fit</th><th>Record ID</th><th>Category</th><th>Location</th><th>Verification</th><th>Published</th><th>Indexing</th><th>Last verified</th><th>Updated</th><th>Actions</th></tr></thead><tbody>
-      {filtered.map((row) => { const fitBadges = [row.moq_level === "low_moq" && "Low MOQ", row.moq_level === "sample_supported" && "Sample Supported", row.supports_sample_orders && "Sample Supported", row.supports_small_orders && "Small Batch Friendly", row.moq_level === "bulk_only" && "Bulk Only", row.supply_model === "factory_direct" && "Factory Direct", row.supplier_type === "wholesaler" && "Wholesaler", row.supplier_type === "trading_company" && "Trading Supplier", row.supplier_type === "authorized_distributor" && "Authorized Distributor"].filter(Boolean) as string[]; return <tr key={row.id}><td><strong>{row.company_name}</strong><br /><span>{row.supplier_type?.replaceAll("_", " ")}</span></td><td><div className="admin-actions">{[...new Set(fitBadges)].map((badge) => <span className={`admin-badge ${badge === "Bulk Only" ? "warn" : "ok"}`} key={badge}>{badge}</span>)}</div></td><td>{row.record_id}</td><td><strong>{row.industries?.name || "—"}</strong><br /><span>{row.secondary_category?.name || "—"}</span></td><td>{row.city}, {row.province}</td><td><span className={`admin-badge ${(row.verification_records ?? []).filter((check) => check.status === "verified").length === 3 ? "ok" : "warn"}`}>{(row.verification_records ?? []).filter((check) => check.status === "verified").length}/3 verified</span></td><td>{row.is_published ? "Yes" : "No"}</td><td>{row.is_indexable ? "Indexable" : "Noindex"}</td><td>{row.last_verified_at ? new Date(row.last_verified_at).toLocaleDateString() : "—"}</td><td>{new Date(row.updated_at).toLocaleDateString()}</td><td><div className="admin-actions"><Link href={`/admin/factories/${row.id}`}>Edit</Link>{row.is_published && <Link href={`/factories/${row.slug}`} target="_blank">Preview</Link>}<button className="admin-secondary" onClick={() => patchFactory(row, { is_published: !row.is_published, is_indexable: row.is_published ? false : row.is_indexable })}>{row.is_published ? "Unpublish" : "Publish"}</button><button className="admin-secondary" onClick={() => patchFactory(row, { is_indexable: !row.is_indexable })}>{row.is_indexable ? "Noindex" : "Index"}</button></div></td></tr>; })}
+      {filtered.map((row) => { const fitBadges = [row.moq_level === "low_moq" && "Low MOQ", row.moq_level === "sample_supported" && "Sample Supported", row.supports_sample_orders && "Sample Supported", row.supports_small_orders && "Small Batch Friendly", row.moq_level === "bulk_only" && "Bulk Only", row.supply_model === "factory_direct" && "Factory Direct", row.supplier_type === "wholesaler" && "Wholesaler", row.supplier_type === "trading_company" && "Trading Supplier", row.supplier_type === "authorized_distributor" && "Authorized Distributor"].filter(Boolean) as string[]; return <tr key={row.id} style={highlightedId === row.id ? { background: "#FFF7ED", boxShadow: "inset 3px 0 0 #F59E0B" } : undefined}><td><strong>{row.company_name}</strong><br /><span>{row.supplier_type?.replaceAll("_", " ")}</span></td><td><div className="admin-actions">{[...new Set(fitBadges)].map((badge) => <span className={`admin-badge ${badge === "Bulk Only" ? "warn" : "ok"}`} key={badge}>{badge}</span>)}</div></td><td>{row.record_id}</td><td><strong>{row.industries?.name || "—"}</strong><br /><span>{row.secondary_category?.name || "—"}</span></td><td>{row.city}, {row.province}</td><td><span className={`admin-badge ${(row.verification_records ?? []).filter((check) => check.status === "verified").length === 3 ? "ok" : "warn"}`}>{(row.verification_records ?? []).filter((check) => check.status === "verified").length}/3 verified</span></td><td>{row.is_published ? "Yes" : "No"}</td><td>{row.is_indexable ? "Indexable" : "Noindex"}</td><td>{row.last_verified_at ? new Date(row.last_verified_at).toLocaleDateString() : "—"}</td><td>{new Date(row.updated_at).toLocaleDateString()}</td><td><div className="admin-actions"><Link href={`/admin/factories/${row.id}`} onClick={() => { sessionStorage.setItem(LIST_STATE_KEY, JSON.stringify({ ...getListState(), editingId: row.id })); }}>Edit</Link>{row.is_published && <Link href={`/factories/${row.slug}`} target="_blank">Preview</Link>}<button className="admin-secondary" onClick={() => patchFactory(row, { is_published: !row.is_published, is_indexable: row.is_published ? false : row.is_indexable })}>{row.is_published ? "Unpublish" : "Publish"}</button><button className="admin-secondary" onClick={() => patchFactory(row, { is_indexable: !row.is_indexable })}>{row.is_indexable ? "Noindex" : "Index"}</button></div></td></tr>; })}
       {filtered.length === 0 && <tr><td colSpan={11}>No suppliers match these filters.</td></tr>}
     </tbody></table></div>
   </>;

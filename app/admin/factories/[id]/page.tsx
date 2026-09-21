@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import AdminFactoryForm from "@/components/admin-factory-form";
 import { requireAdmin } from "@/lib/auth";
@@ -15,5 +16,5 @@ export default async function FactoryAdminPage({ params }: { params: Promise<{ i
     supabase.from("industries").select("id,name,parent_id,primary_industry,secondary_category").order("sort_order").order("name"),
   ]);
   if (!factory.data) notFound();
-  return <section><h1 className="admin-title">Edit supplier</h1><p className="admin-subtitle">Internal fields and locked contact details never appear in the public Data API.</p><AdminFactoryForm initialFactory={factory.data} initialVerifications={verifications.data ?? []} initialContact={contact.data} industries={industries.data ?? []} /></section>;
+  return <section><div className="admin-heading"><div><h1 className="admin-title">Edit supplier</h1><p className="admin-subtitle">Internal fields and locked contact details never appear in the public Data API.</p></div><Link className="admin-secondary" href="/admin/factories">← Back to suppliers</Link></div><AdminFactoryForm initialFactory={factory.data} initialVerifications={verifications.data ?? []} initialContact={contact.data} industries={industries.data ?? []} /></section>;
 }
