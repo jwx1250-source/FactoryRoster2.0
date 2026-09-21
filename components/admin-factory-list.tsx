@@ -27,6 +27,15 @@ type FactoryRow = {
   updated_at: string;
 };
 
+const normalizeFilterValue = (value: unknown) => String(value ?? "").trim().toLocaleLowerCase();
+
+function matchesFilter(selected: string, actual: unknown) {
+  if (selected === "all") return true;
+  const normalizedActual = normalizeFilterValue(actual);
+  if (selected === "missing") return normalizedActual.length === 0;
+  return normalizedActual === normalizeFilterValue(selected);
+}
+
 export default function AdminFactoryList() {
   const [rows, setRows] = useState<FactoryRow[]>([]);
   const [search, setSearch] = useState("");
@@ -57,8 +66,8 @@ export default function AdminFactoryList() {
       .finally(() => setLoading(false));
   }, []);
 
-  const provinces = useMemo(() => [...new Set(rows.map((row) => row.province).filter(Boolean))].sort(), [rows]);
-  const cities = useMemo(() => [...new Set(rows.filter((row) => province === "all" || (province === "missing" ? !row.province?.trim() : row.province === province)).map((row) => row.city).filter(Boolean))].sort(), [province, rows]);
+  const provinces = useMemo(() => [...new Set(rows.map((row) => row.province?.trim()).filter(Boolean))].sort(), [rows]);
+  const cities = useMemo(() => [...new Set(rows.filter((row) => matchesFilter(province, row.province)).map((row) => row.city?.trim()).filter(Boolean))].sort(), [province, rows]);
   const industries = useMemo(() => [...new Set(rows.map((row) => row.industries?.name).filter((value): value is string => Boolean(value)))].sort(), [rows]);
   const secondaryCategories = useMemo(() => [...new Set(rows.filter((row) => industry === "all" || row.industries?.name === industry).map((row) => row.secondary_category?.name).filter((value): value is string => Boolean(value)))].sort(), [industry, rows]);
   const filtered = useMemo(() => {
@@ -71,13 +80,13 @@ export default function AdminFactoryList() {
       const indexingMatches = indexing === "all" || (indexing === "indexable" ? row.is_indexable : !row.is_indexable);
       const booleanMatches = (filter: string, value: boolean) => filter === "all" || value === (filter === "yes");
       return (!query || haystack.includes(query)) && statusMatches && verificationMatches && indexingMatches
-        && (province === "all" || (province === "missing" ? !row.province?.trim() : row.province === province))
-        && (city === "all" || (city === "missing" ? !row.city?.trim() : row.city === city))
-        && (industry === "all" || row.industries?.name === industry)
-        && (secondaryCategory === "all" || row.secondary_category?.name === secondaryCategory)
-        && (supplierType === "all" || row.supplier_type === supplierType)
-        && (supplyModel === "all" || row.supply_model === supplyModel)
-        && (moqLevel === "all" || row.moq_level === moqLevel)
+        && matchesFilter(province, row.province)
+        && matchesFilter(city, row.city)
+        && matchesFilter(industry, row.industries?.name)
+        && matchesFilter(secondaryCategory, row.secondary_category?.name)
+        && matchesFilter(supplierType, row.supplier_type)
+        && matchesFilter(supplyModel, row.supply_model)
+        && matchesFilter(moqLevel, row.moq_level)
         && booleanMatches(sampleOrders, row.supports_sample_orders)
         && booleanMatches(smallOrders, row.supports_small_orders)
         && booleanMatches(privateLabel, row.supports_private_label);
