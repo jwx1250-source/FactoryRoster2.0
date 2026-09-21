@@ -644,6 +644,12 @@ function Footer({ onNav }: { onNav?: (k: string) => void }) {
             </div>
           ))}
         </div>
+        <div style={{ padding: "12px 0", borderTop: "1px solid #E9ECF1", borderBottom: "1px solid #E9ECF1", marginBottom: 20 }}>
+          <p style={{ fontSize: 11.5, color: "#9CA3AF", lineHeight: 1.7, margin: 0 }}>
+            <span style={{ fontWeight: 600, color: "#6B7280" }}>免责声明：</span>
+            本平台所展示的企业工商基础信息、主营品类等公开商事信息，来源于企业对外公开渠道，仅作国际贸易供需匹配参考。
+          </p>
+        </div>
         <div style={{ paddingTop: 20, borderTop: "1px solid #E9ECF1", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Mono color="#9CA3AF">© {new Date().getFullYear()} FactoryRoster · factoryroster.com</Mono>
           <Mono color="#9CA3AF">Verified supplier records · reviewed before listing</Mono>

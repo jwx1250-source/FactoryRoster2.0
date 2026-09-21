@@ -23,6 +23,9 @@ export function Footer() {
           </div>
         ))}
       </div>
+      <div className="shell footer-disclaimer">
+        <p><strong>免责声明：</strong>本平台所展示的企业工商基础信息、主营品类等公开商事信息，来源于企业对外公开渠道，仅作国际贸易供需匹配参考。</p>
+      </div>
       <div className="shell footer-bottom">
         <span>© {new Date().getFullYear()} FactoryRoster</span>
         <span>Supplier intelligence, not a marketplace.</span>
