@@ -439,8 +439,8 @@ function Industries({ onSearch }: { onSearch: (q: string) => void }) {
         <Link href="/industries" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#1E40AF", textDecoration: "none" }}>View all <ChevronRight /></Link>
       </div>
       <div className="r2" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
-        {CATEGORIES.map((cat) => (
-          <a key={cat.name} href={`/search?q=${encodeURIComponent(cat.name)}`} onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
+          {CATEGORIES.map((cat) => (
+          <a key={cat.name} href={`/industries/${cat.slug}`}
             style={{ display: "flex", flexDirection: "column", gap: 0, padding: "20px", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none", background: "#fff", transition: "border-color 0.15s,box-shadow 0.15s" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#1E40AF"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 4px 14px rgba(30,64,175,0.08)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none"; }}>
@@ -1434,8 +1434,8 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
           </span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(268px,1fr))", gap: 10 }}>
-          {filteredCards.map((cat) => (
-            <a key={cat.name} href={`/search?q=${encodeURIComponent(cat.name)}`} onClick={(e) => { e.preventDefault(); onSearch(cat.name); }}
+            {filteredCards.map((cat) => (
+            <a key={cat.name} href={`/industries/${cat.slug}`}
               style={{ display: "flex", flexDirection: "column", padding: "18px 20px", background: "#fff", border: "1px solid #E9ECF1", borderRadius: 10, textDecoration: "none" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#BFCDEE"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 2px 12px rgba(30,64,175,0.06)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#E9ECF1"; (e.currentTarget as HTMLAnchorElement).style.boxShadow = "none"; }}>
