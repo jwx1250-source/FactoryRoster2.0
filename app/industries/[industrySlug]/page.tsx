@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import FigmaApp from "@/components/figma-app";
 import { industries, siteUrl } from "@/lib/site";
+import SeoIndustryContent from "@/components/seo-industry-content";
 
 export async function generateMetadata({ params }: { params: Promise<{ industrySlug: string }> }): Promise<Metadata> {
   const { industrySlug } = await params;
@@ -17,5 +18,5 @@ export function generateStaticParams() {
 export default async function IndustryPage({ params }: { params: Promise<{ industrySlug: string }> }) {
   const { industrySlug } = await params;
   if (!industries.some((item) => item.slug === industrySlug)) notFound();
-  return <FigmaApp initialPath={`/industries/${industrySlug}`} />;
+  return <><SeoIndustryContent slug={industrySlug} /><FigmaApp initialPath={`/industries/${industrySlug}`} /></>;
 }

@@ -12,13 +12,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const supabase = createSupabaseAdminClient();
-    const [{ data: databaseIndustries }, { data: guides }, { data: factories }] = await Promise.all([
-      supabase.from("industries").select("slug"),
+    const [{ data: guides }, { data: factories }] = await Promise.all([
       supabase.from("guides").select("slug").eq("is_published", true),
       supabase.from("factories").select("slug").eq("is_published", true).eq("is_indexable", true),
     ]);
     dynamicRoutes = [
-      ...(databaseIndustries ?? []).map((item) => `/industries/${item.slug}`),
       ...(guides ?? []).map((item) => `/guides/${item.slug}`),
       ...(factories ?? []).map((item) => `/factories/${item.slug}`),
     ];

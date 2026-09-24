@@ -821,7 +821,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
           {/* Result summary */}
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 4 }}>
-              {loading ? "Loading verified suppliers…" : `${filtered.length} Verified ${query || "China"} Suppliers`}
+              {loading ? `China ${query || "Verified"} Suppliers` : `${filtered.length} Verified ${query || "China"} Suppliers`}
             </h1>
             <p style={{ fontSize: 13, color: "#6B7280" }}>
               All results passed FactoryRoster's three-step verification process.

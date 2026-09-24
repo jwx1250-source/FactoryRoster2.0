@@ -1,4 +1,5 @@
 import FigmaApp from "@/components/figma-app";
+import { HomepageIndustryLinks } from "@/components/seo-navigation";
 import { siteUrl } from "@/lib/site";
 
 export const metadata = {
@@ -8,5 +9,5 @@ export const metadata = {
 };
 
 export default function HomePage() {
-  return <FigmaApp initialPath="/" />;
+  return <><FigmaApp initialPath="/" /><HomepageIndustryLinks /></>;
 }
