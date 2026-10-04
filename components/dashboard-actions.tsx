@@ -16,7 +16,13 @@ export default function DashboardActions() {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <Link href="/" style={{ padding: "8px 14px", borderRadius: 8, color: "#1E40AF", textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+        Home
+      </Link>
+      <Link href="/industries" style={{ padding: "8px 10px", borderRadius: 8, color: "#64748B", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+        Industries
+      </Link>
       <Link href="/search" style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #D1D5DB", color: "#374151", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
         Search factories
       </Link>

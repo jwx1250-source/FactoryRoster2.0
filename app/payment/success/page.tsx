@@ -59,7 +59,7 @@ export default function PaymentSuccessPage() {
   return (
     <main style={{ minHeight: "100vh", background: "linear-gradient(135deg,#F7F9FC 0%,#EFF4FF 100%)", padding: "28px 20px 56px" }}>
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 52 }}><BrandMark /><span style={{ fontSize: 12, color: "#64748B" }}>Secure credit purchase</span></div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, marginBottom: 52, flexWrap: "wrap" }}><BrandMark /><nav aria-label="Account navigation" style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 13, fontWeight: 600 }}><Link href="/" style={{ color: "#1E40AF", textDecoration: "none" }}>Home</Link><Link href="/industries" style={{ color: "#64748B", textDecoration: "none" }}>Industries</Link><Link href="/pricing" style={{ color: "#64748B", textDecoration: "none" }}>Pricing</Link><Link href="/credits" style={{ color: "#64748B", textDecoration: "none" }}>Credits</Link></nav></div>
         <section style={{ maxWidth: 600, margin: "0 auto", background: "#fff", border: "1px solid #E2E8F0", borderRadius: 20, boxShadow: "0 20px 60px rgba(30,64,175,.10)", overflow: "hidden" }}>
           <div style={{ height: 6, background: "linear-gradient(90deg,#1E40AF,#60A5FA)" }} />
           <div style={{ padding: "44px 44px 40px", textAlign: "center" }}>
