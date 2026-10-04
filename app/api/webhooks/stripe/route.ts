@@ -114,6 +114,15 @@ export async function POST(request: Request) {
       eventId,
       message: error instanceof Error ? error.message : String(error),
     });
+    try {
+      await createSupabaseAdminClient().from("stripe_webhook_failures").insert({
+        event_id: eventId,
+        event_type: eventType,
+        error_message: error instanceof Error ? error.message : String(error),
+      });
+    } catch (diagnosticError) {
+      console.error("[stripe webhook] failure diagnostic write failed", diagnosticError);
+    }
     return Response.json({
       error: "Webhook processing failed",
       code: "PROCESSING_ERROR",
