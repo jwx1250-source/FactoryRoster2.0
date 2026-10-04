@@ -44,8 +44,8 @@ async function grantCredits(event: Stripe.Event, session: Stripe.Checkout.Sessio
   if (error) throw error;
 }
 
-async function recordRefund(event: Stripe.Event, charge: Stripe.Charge) {
-  const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+async function recordRefund(event: Stripe.Event, object: Stripe.Charge | Stripe.Refund) {
+  const paymentIntentId = typeof object.payment_intent === "string" ? object.payment_intent : null;
   if (!paymentIntentId) throw new Error("Refunded charge is missing a PaymentIntent");
   const refunds = await getStripe().refunds.list({ payment_intent: paymentIntentId, limit: 100 });
   const supabase = createSupabaseAdminClient();
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       const session = event.data.object;
       if (session.mode !== "payment") throw new Error("Only one-time Checkout Sessions are supported");
       if (session.payment_status === "paid") await grantCredits(event, session);
-    } else if (event.type === "charge.refunded") {
+    } else if (event.type === "charge.refunded" || event.type === "refund.created") {
       await recordRefund(event, event.data.object);
     } else if (event.type === "charge.dispute.created") {
       await recordDisputeOpened(event, event.data.object);

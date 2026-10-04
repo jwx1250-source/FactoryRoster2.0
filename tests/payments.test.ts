@@ -12,6 +12,7 @@ const factoryRoute = readFileSync(resolve(root, "app/api/factories/[slug]/route.
 const unlockRoute = readFileSync(resolve(root, "app/api/factories/[slug]/unlock/route.ts"), "utf8");
 const migration = readFileSync(resolve(root, "supabase/migrations/20261004133823_production_contact_credit_payments.sql"), "utf8");
 const refundMigration = readFileSync(resolve(root, "supabase/migrations/20261004180000_refund_dispute_handling.sql"), "utf8");
+const refundHardeningMigration = readFileSync(resolve(root, "supabase/migrations/20261004200000_harden_refund_idempotency.sql"), "utf8");
 
 describe("Stripe credit catalog", () => {
   it.each([
@@ -68,12 +69,14 @@ describe("atomic unlock and contact privacy", () => {
 describe("refunds, disputes, and account restrictions", () => {
   it("handles full and partial refunds through compensating ledger entries", () => {
     expect(webhookRoute).toContain('event.type === "charge.refunded"');
+    expect(webhookRoute).toContain('event.type === "refund.created"');
     expect(webhookRoute).toContain('record_stripe_refund');
     expect(refundMigration).toContain("stripe_refunds");
     expect(refundMigration).toContain("stripe_refund_id");
     expect(refundMigration).toContain("type, amount, payment_intent_id");
     expect(refundMigration).toContain("-adjusted_credits");
     expect(refundMigration).toContain("least(eligible_credits, available_credits)");
+    expect(refundHardeningMigration).toContain("returning refund_id into inserted_refund_id");
   });
 
   it("deduplicates refund and dispute webhooks", () => {
