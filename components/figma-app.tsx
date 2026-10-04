@@ -1013,6 +1013,18 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
   }, [factory.slug]);
 
   useEffect(() => {
+    if (!factory.slug) return;
+    fetch(`/api/factories/${encodeURIComponent(factory.slug)}/unlock`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const body = await response.json();
+        return body.contact ?? null;
+      })
+      .then((savedContact) => { if (savedContact) setContact(savedContact); })
+      .catch(() => undefined);
+  }, [factory.slug]);
+
+  useEffect(() => {
     fetch("/api/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((body) => { if (body?.user) setCredits(body.credits ?? 0); }).catch(() => undefined);
   }, []);
 
