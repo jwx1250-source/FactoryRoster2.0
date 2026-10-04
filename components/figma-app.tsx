@@ -309,7 +309,15 @@ function HamburgerIcon({ open }: { open: boolean }) {
 function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (k: string) => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [account, setAccount] = useState<{ credits?: number } | null>(null);
-  useEffect(() => { fetch("/api/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((body) => body?.user && setAccount({ credits: body.credits })).catch(() => undefined); }, []);
+  useEffect(() => {
+    fetch("/api/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((body) => body?.user && setAccount({ credits: body.credits })).catch(() => undefined);
+    const handleCreditsUpdated = (event: Event) => {
+      const credits = (event as CustomEvent<{ credits?: number }>).detail?.credits;
+      if (typeof credits === "number") setAccount((current) => current ? { ...current, credits } : current);
+    };
+    window.addEventListener("factoryroster:credits-updated", handleCreditsUpdated);
+    return () => window.removeEventListener("factoryroster:credits-updated", handleCreditsUpdated);
+  }, []);
   const navHref: Record<string, string> = { Industries: "/industries", Verification: "/verification", Pricing: "/pricing", Guides: "/guides", "Sign In": "/sign-in", "Get Started": "/get-started" };
 
   const activeItem =
@@ -348,7 +356,7 @@ function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (
           {/* Desktop auth */}
           <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {account && <Link href="/credits" style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none", fontWeight: 600 }}>{account.credits ?? 0} Contact Credits</Link>}
-            <Link href="/sign-in" onClick={(e) => { e.preventDefault(); onNav("Sign In"); }} style={{ fontSize: 13.5, fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>Sign In</Link>
+            {!account && <Link href="/sign-in" onClick={(e) => { e.preventDefault(); onNav("Sign In"); }} style={{ fontSize: 13.5, fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>Sign In</Link>}
             <Link href="/get-started" onClick={(e) => { e.preventDefault(); onNav("Get Started"); }} style={{ padding: "7px 16px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, textDecoration: "none", letterSpacing: "-0.1px" }}>Get Started</Link>
           </div>
 
@@ -371,7 +379,7 @@ function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (
             </button>
           ))}
           <div className="nav-mobile-divider" />
-          <button onClick={() => nav("Sign In")} className="nav-mobile-item" style={{ color: "#6B7280" }}>Sign In</button>
+          {!account && <button onClick={() => nav("Sign In")} className="nav-mobile-item" style={{ color: "#6B7280" }}>Sign In</button>}
           <div style={{ padding: "8px 16px" }}>
             <button onClick={() => nav("Get Started")}
               style={{ width: "100%", padding: "10px 0", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
@@ -1020,7 +1028,12 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
         const body = await response.json();
         return body.contact ?? null;
       })
-      .then((savedContact) => { if (savedContact) setContact(savedContact); })
+      .then((savedContact) => {
+        if (savedContact) {
+          setContact(savedContact);
+          if (typeof savedContact.credits_remaining === "number") setCredits(savedContact.credits_remaining);
+        }
+      })
       .catch(() => undefined);
   }, [factory.slug]);
 
@@ -1045,6 +1058,10 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
         throw new Error(body.error || "Unable to unlock contact");
       }
       setContact(body.contact);
+      if (typeof body.contact?.credits_remaining === "number") {
+        setCredits(body.contact.credits_remaining);
+        window.dispatchEvent(new CustomEvent("factoryroster:credits-updated", { detail: { credits: body.contact.credits_remaining } }));
+      }
     } catch (reason) {
       setUnlockError(reason instanceof Error ? reason.message : "Unable to unlock contact");
     } finally {
