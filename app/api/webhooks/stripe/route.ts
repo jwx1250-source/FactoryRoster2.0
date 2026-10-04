@@ -1,7 +1,6 @@
 import type Stripe from "stripe";
 
 import { getStripeEnv } from "@/lib/env";
-import { apiError } from "@/lib/http";
 import { isPlanSlug, PLAN_CATALOG } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -84,6 +83,8 @@ async function recordDisputeClosed(event: Stripe.Event, dispute: Stripe.Dispute)
 }
 
 export async function POST(request: Request) {
+  let eventType = "unknown";
+  let eventId = "unknown";
   try {
     const signature = request.headers.get("stripe-signature");
     if (!signature) return Response.json({ error: "Missing Stripe signature" }, { status: 400 });
@@ -91,6 +92,8 @@ export async function POST(request: Request) {
     const rawBody = await request.text();
     const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(rawBody, signature, getStripeEnv().STRIPE_WEBHOOK_SECRET);
+    eventType = event.type;
+    eventId = event.id;
 
     if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object;
@@ -106,6 +109,14 @@ export async function POST(request: Request) {
 
     return Response.json({ received: true });
   } catch (error) {
-    return apiError(error);
+    console.error("[stripe webhook] processing failed", {
+      eventType,
+      eventId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return Response.json({
+      error: "Webhook processing failed",
+      code: "PROCESSING_ERROR",
+    }, { status: 500 });
   }
 }
