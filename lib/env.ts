@@ -13,6 +13,9 @@ const serverSchema = publicSchema.extend({
 const stripeSchema = z.object({
   STRIPE_SECRET_KEY: z.string().startsWith("sk_"),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
+  STRIPE_PRICE_STARTER_ID: z.string().startsWith("price_"),
+  STRIPE_PRICE_BUYER_ID: z.string().startsWith("price_"),
+  STRIPE_PRICE_PRO_ID: z.string().startsWith("price_"),
 });
 
 export class MissingConfigurationError extends Error {

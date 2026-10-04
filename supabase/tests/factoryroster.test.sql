@@ -1,14 +1,14 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(29);
+select plan(31);
 
 select has_table('public', 'factories', 'factories table exists');
 select has_table('public', 'factory_contacts', 'locked contacts table exists');
 select has_table('public', 'contact_unlocks', 'contact unlock ledger exists');
 select has_table('public', 'credit_transactions', 'credit transaction ledger exists');
 select has_function('public', 'unlock_factory_contact', array['uuid'], 'atomic unlock function exists');
-select has_function('public', 'grant_stripe_credits', array['text','text','uuid','integer','text','text'], 'idempotent Stripe credit function exists');
+select has_function('public', 'grant_stripe_credits', array['text','text','uuid','integer','text','text','integer','text','text'], 'idempotent Stripe credit function exists');
 select has_function('public', 'admin_adjust_contact_credits', array['uuid','integer','text'], 'manual credit adjustment function exists');
 select has_column('public', 'factories', 'internal_notes', 'factories have internal notes');
 select has_column('public', 'factory_contacts', 'is_active', 'contacts can be deactivated');
@@ -34,6 +34,8 @@ select ok(not has_function_privilege('anon', 'public.unlock_factory_contact(uuid
 select ok(has_function_privilege('authenticated', 'public.unlock_factory_contact(uuid)', 'EXECUTE'), 'authenticated users can call unlock');
 select ok(not has_function_privilege('authenticated', 'public.admin_adjust_contact_credits(uuid,integer,text)', 'EXECUTE'), 'members cannot adjust credits');
 select ok(has_function_privilege('service_role', 'public.admin_adjust_contact_credits(uuid,integer,text)', 'EXECUTE'), 'service role can adjust credits');
+select ok((select count(*) from pg_indexes where indexname = 'credit_transactions_payment_intent_unique') = 1, 'payment intent uniqueness exists');
+select ok((select count(*) from pg_indexes where indexname = 'credit_transactions_checkout_session_unique') = 1, 'checkout session uniqueness exists');
 
 select * from finish();
 rollback;

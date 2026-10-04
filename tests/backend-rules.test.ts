@@ -85,9 +85,9 @@ describe("locked contact contract", () => {
 describe("payment and database safeguards", () => {
   it("uses the required Stripe credit amounts", () => {
     expect(PLAN_CATALOG.starter.credits).toBe(3);
-    expect(PLAN_CATALOG.business.credits).toBe(15);
+    expect(PLAN_CATALOG.buyer.credits).toBe(15);
     expect(PLAN_CATALOG.pro.credits).toBe(60);
-    expect(PLAN_CATALOG["sourcing-membership"].credits).toBe(100);
+    expect(Object.keys(PLAN_CATALOG)).toEqual(["starter", "buyer", "pro"]);
   });
 
   it("makes Stripe fulfillment and contact unlocks idempotent", () => {

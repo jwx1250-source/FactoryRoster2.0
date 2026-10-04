@@ -32,16 +32,15 @@ Copy the local credentials printed by Supabase into `.env.local`. For a hosted p
 
 ## Stripe
 
-Create four Stripe prices and write their IDs into the matching rows in `public.pricing_plans`:
+In Stripe Test Mode, create these three one-time prices and set their IDs as the server-only environment variables shown in `.env.example`:
 
 | Plan | Amount | Credits | Mode |
 | --- | ---: | ---: | --- |
 | `starter` | $9.90 | 3 | payment |
-| `business` | $29.90 | 15 | payment |
+| `buyer` | $29.90 | 15 | payment |
 | `pro` | $99.00 | 60 | payment |
-| `sourcing-membership` | $199/month | 100/month | subscription |
 
-Register `/api/webhooks/stripe` for `checkout.session.completed`, `invoice.payment_succeeded`, and `customer.subscription.deleted`. The handler verifies the raw-body signature and fulfills each Stripe event once.
+Register `/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`. The handler verifies the raw-body signature, validates the server-side price catalog, and fulfills each Checkout Session/Payment only once.
 
 ## Backend routes
 

@@ -1,45 +1,57 @@
 import { z } from "zod";
 
 import { requireAuthenticatedUser } from "@/lib/auth";
-import { getSiteUrl } from "@/lib/env";
+import { getSiteUrl, getStripeEnv } from "@/lib/env";
 import { apiError, noStoreJson } from "@/lib/http";
-import { isPlanSlug, PLAN_CATALOG } from "@/lib/plans";
+import { isPlanSlug } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const schema = z.object({ plan: z.string() });
+const schema = z.object({
+  plan: z.string(),
+  return_to: z.string().optional(),
+});
+
+function safeReturnPath(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "/dashboard";
+  return value;
+}
 
 export async function POST(request: Request) {
   try {
-    const { plan } = schema.parse(await request.json());
+    const input = schema.parse(await request.json());
+    const { plan } = input;
     if (!isPlanSlug(plan)) return noStoreJson({ error: "Unknown pricing plan" }, { status: 400 });
 
     const user = await requireAuthenticatedUser();
+    const stripeEnv = getStripeEnv();
+    const priceIds = {
+      starter: stripeEnv.STRIPE_PRICE_STARTER_ID,
+      buyer: stripeEnv.STRIPE_PRICE_BUYER_ID,
+      pro: stripeEnv.STRIPE_PRICE_PRO_ID,
+    } as const;
+    const returnTo = safeReturnPath(input.return_to);
     const supabase = await createSupabaseServerClient();
-    const { data: pricingPlan, error } = await supabase
-      .from("pricing_plans")
-      .select("stripe_price_id,is_active")
-      .eq("slug", plan)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (error) throw error;
-    if (!pricingPlan?.stripe_price_id) {
-      return noStoreJson({ error: "This pricing plan is not connected to Stripe yet", code: "PRICE_NOT_CONFIGURED" }, { status: 503 });
-    }
-
-    const catalogPlan = PLAN_CATALOG[plan];
+    const { data: profile } = await supabase.from("profiles").select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
     const siteUrl = getSiteUrl();
     const stripe = getStripe();
-    const metadata = { user_id: user.id, plan_slug: plan, credits: String(catalogPlan.credits) };
+    let customerId = profile?.stripe_customer_id ?? undefined;
+    if (!customerId) {
+      const customer = await stripe.customers.create({ email: user.email ?? undefined, metadata: { user_id: user.id } });
+      customerId = customer.id;
+      await createSupabaseAdminClient().from("profiles").update({ stripe_customer_id: customerId }).eq("user_id", user.id);
+    }
+    const metadata = { user_id: user.id, plan_slug: plan, return_to: returnTo };
     const session = await stripe.checkout.sessions.create({
-      mode: catalogPlan.mode,
-      line_items: [{ price: pricingPlan.stripe_price_id, quantity: 1 }],
+      mode: "payment",
+      managed_payments: { enabled: false },
+      line_items: [{ price: priceIds[plan], quantity: 1 }],
       client_reference_id: user.id,
-      customer_email: user.email,
+      customer: customerId,
       metadata,
-      ...(catalogPlan.mode === "subscription" ? { subscription_data: { metadata } } : {}),
-      success_url: `${siteUrl}/pricing?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/pricing?checkout=cancelled`,
+      success_url: `${siteUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&return_to=${encodeURIComponent(returnTo)}`,
+      cancel_url: `${siteUrl}${returnTo}?checkout=cancelled`,
     });
     return noStoreJson({ url: session.url });
   } catch (error) {

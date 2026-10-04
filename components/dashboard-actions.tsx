@@ -20,6 +20,9 @@ export default function DashboardActions() {
       <Link href="/search" style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #D1D5DB", color: "#374151", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
         Search factories
       </Link>
+      <Link href="/credits" style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #D1D5DB", color: "#374151", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+        Credits
+      </Link>
       <button onClick={signOut} disabled={busy} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #D1D5DB", background: "#fff", color: "#6B7280", fontSize: 13, fontWeight: 600, cursor: busy ? "wait" : "pointer" }}>
         {busy ? "Signing out…" : "Sign out"}
       </button>

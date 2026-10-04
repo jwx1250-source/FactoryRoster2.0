@@ -308,6 +308,8 @@ function HamburgerIcon({ open }: { open: boolean }) {
 
 function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (k: string) => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [account, setAccount] = useState<{ credits?: number } | null>(null);
+  useEffect(() => { fetch("/api/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((body) => body?.user && setAccount({ credits: body.credits })).catch(() => undefined); }, []);
   const navHref: Record<string, string> = { Industries: "/industries", Verification: "/verification", Pricing: "/pricing", Guides: "/guides", "Sign In": "/sign-in", "Get Started": "/get-started" };
 
   const activeItem =
@@ -345,6 +347,7 @@ function Nav({ onHome, page, onNav }: { onHome: () => void; page: Page; onNav: (
 
           {/* Desktop auth */}
           <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {account && <Link href="/credits" style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none", fontWeight: 600 }}>{account.credits ?? 0} Contact Credits</Link>}
             <Link href="/sign-in" onClick={(e) => { e.preventDefault(); onNav("Sign In"); }} style={{ fontSize: 13.5, fontWeight: 500, color: "#6B7280", textDecoration: "none" }}>Sign In</Link>
             <Link href="/get-started" onClick={(e) => { e.preventDefault(); onNav("Get Started"); }} style={{ padding: "7px 16px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, textDecoration: "none", letterSpacing: "-0.1px" }}>Get Started</Link>
           </div>
@@ -990,6 +993,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
   const [profile, setProfile] = useState<Record<string, unknown> | null>(factory.profile ?? null);
   const [profileError, setProfileError] = useState("");
   const [contact, setContact] = useState<UnlockedContact | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
   const [unlockBusy, setUnlockBusy] = useState(false);
   const [unlockError, setUnlockError] = useState("");
 
@@ -1008,6 +1012,10 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
     return () => controller.abort();
   }, [factory.slug]);
 
+  useEffect(() => {
+    fetch("/api/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((body) => { if (body?.user) setCredits(body.credits ?? 0); }).catch(() => undefined);
+  }, []);
+
   const unlock = async () => {
     if (!factory.slug) return;
     if (!window.confirm("Unlock this Verified Contact Record for 1 Contact Credit?")) return;
@@ -1021,7 +1029,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
           router.push(`/sign-in?next=${encodeURIComponent(`/factories/${factory.slug}`)}`);
           return;
         }
-        if (body.code === "INSUFFICIENT_CREDITS") throw new Error("You need contact credits to unlock this record. Contact credit purchase is coming soon.");
+        if (body.code === "INSUFFICIENT_CREDITS") { router.push(`/pricing?return_to=${encodeURIComponent(`/factories/${factory.slug}`)}`); return; }
         throw new Error(body.error || "Unable to unlock contact");
       }
       setContact(body.contact);
@@ -1117,7 +1125,7 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
               <button onClick={unlock} disabled={unlockBusy} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: unlockBusy ? "wait" : "pointer", letterSpacing: "-0.1px", opacity: unlockBusy ? 0.7 : 1 }}>
                 {unlockBusy ? "Unlocking…" : contact ? "Contact Unlocked" : "Unlock Contact"}
               </button>
-              <Mono color="#9CA3AF">Uses 1 contact credit</Mono>
+              <Mono color="#9CA3AF">Uses 1 contact credit{credits !== null ? ` · ${credits} available` : ""}</Mono>
             </div>
           </div>
         </div>
@@ -1304,8 +1312,9 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
             <div style={{ padding: "14px 20px 16px", borderTop: "1px solid #E9ECF1" }}>
               {unlockError && <p role="alert" style={{ color: "#B91C1C", fontSize: 12, lineHeight: 1.5, marginBottom: 10 }}>{unlockError}</p>}
               <button onClick={unlock} disabled={unlockBusy || Boolean(contact)} style={{ width: "100%", padding: "11px 0", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 14, fontWeight: 600, border: "none", cursor: unlockBusy ? "wait" : "pointer", opacity: contact ? 0.7 : 1, letterSpacing: "-0.1px", marginBottom: 8 }}>
-                {unlockBusy ? "Unlocking…" : contact ? `Unlocked · ${contact.credits_remaining} credits left` : "Unlock Contact"}
+                {unlockBusy ? "Unlocking…" : contact ? `Unlocked · ${contact.credits_remaining} credits left` : "Unlock contact — 1 credit"}
               </button>
+              {!contact && credits === 0 && <p style={{ color: "#92400E", fontSize: 12, lineHeight: 1.5, marginBottom: 8 }}>You need Contact Credits to unlock this manufacturer's verified contact details.</p>}
               <p style={{ fontSize: 11.5, color: "#9CA3AF", textAlign: "center" as const }}>
                 Uses 1 contact credit
               </p>
@@ -1589,7 +1598,7 @@ function VerificationPage({ onSearch, onIndustries, onPricing, onNav }: { onSear
           <h1 style={{ fontSize: "clamp(32px,4.5vw,48px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.1, color: "#0D1117", marginBottom: 14 }}>
             Verified Before Listed
           </h1>
-          <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 28px" }}>
+          <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.55, maxWidth: 480, margin: "0 auto 18px" }}>
             Every supplier profile must pass verification before it appears in FactoryRoster search results.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
@@ -1902,7 +1911,29 @@ function CheckCell({ yes }: { yes: boolean }) {
   );
 }
 
+function CheckoutButton({ plan, returnTo }: { plan: "starter" | "buyer" | "pro"; returnTo: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const checkout = async () => {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan, return_to: returnTo }) });
+      const body = await response.json();
+      if (response.status === 401) { router.push(`/sign-in?next=${encodeURIComponent(`/pricing?return_to=${returnTo}`)}`); return; }
+      if (!response.ok || !body.url) throw new Error(body.error || "Unable to start checkout");
+      window.location.assign(body.url);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to start checkout"); setBusy(false); }
+  };
+  return <><button onClick={checkout} disabled={busy} style={{ width: "100%", padding: "9px 0", borderRadius: 8, background: busy ? "#9CA3AF" : "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: busy ? "wait" : "pointer", marginBottom: error ? 8 : 0 }}>{busy ? "Opening checkout…" : "Buy Contact Credits"}</button>{error && <p role="alert" style={{ color: "#B91C1C", fontSize: 11.5, textAlign: "center" }}>{error}</p>}</>;
+}
+
 function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) => void; onIndustries: () => void; onNav?: (k: string) => void }) {
+  const [returnTo] = useState(() => {
+    if (typeof window === "undefined") return "/credits";
+    const candidate = new URLSearchParams(window.location.search).get("return_to");
+    return candidate?.startsWith("/factories/") && !candidate.includes("\\") ? candidate : "/credits";
+  });
   const plans = [
     {
       name: "Starter", price: "$9.90", desc: "For testing a few supplier contacts.", note: "Best for first-time buyers",
@@ -1910,7 +1941,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
       features: ["3 verified supplier contacts", "Verified phone", "Verified email", "Contact person where available", "Last verification date", "Verification method"],
     },
     {
-      name: "Business", price: "$29.90", desc: "For building a small supplier shortlist.", note: "",
+      name: "Buyer", price: "$29.90", desc: "For building a small supplier shortlist.", note: "",
       credits: 15, popular: true,
       features: ["15 verified supplier contacts", "Verified phone", "Verified email", "Contact person where available", "WhatsApp / WeChat if verified", "Last verification date", "Verification method"],
     },
@@ -1924,34 +1955,29 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
   return (
     <div style={{ minHeight: "100vh", background: "#F7F8FA" }}>
 
-      {/* Compact hero */}
+      {/* Compact page header */}
       <section style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "52px 32px 48px", textAlign: "center" }}>
-          <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 14 }}>Pricing</p>
-          <h1 style={{ fontSize: "clamp(30px,4vw,44px)", fontWeight: 800, letterSpacing: "-1.5px", lineHeight: 1.1, color: "#0D1117", marginBottom: 14 }}>Unlock Verified Supplier Contacts</h1>
-          <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 28px" }}>
-            Search verified supplier records for free. Unlock verified phone, email, contact person, and verification details when you are ready to reach out.
-          </p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 24 }}>
-            <button onClick={() => onSearch("")} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: "pointer" }}>Search Suppliers</button>
-            <a href="#compare" style={{ padding: "9px 20px", borderRadius: 8, background: "#fff", color: "#374151", fontSize: 13.5, fontWeight: 600, border: "1px solid #D1D5DB", textDecoration: "none" }}>Compare Plans</a>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20 }}>
-            {["Verified before listed", "Contact details manually checked", "FactoryRoster does not participate in transactions"].map((t) => (
-              <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: "#6B7280" }}>
-                <VerifiedDot />{t}
-              </span>
-            ))}
+        <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 32px 32px" }}>
+          <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#9CA3AF", marginBottom: 10 }}>Contact Credits</p>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, flexWrap: "wrap" as const }}>
+            <div>
+              <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-1px", lineHeight: 1.1, color: "#0D1117", marginBottom: 8 }}>Unlock Verified Supplier Contacts</h1>
+              <p style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.65, maxWidth: 560 }}>
+                Search verified supplier records for free. Use credits to unlock verified contact details when you are ready to reach out.
+              </p>
+            </div>
+            <p style={{ fontSize: 12, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+              <VerifiedDot />One credit unlocks one verified supplier contact.
+            </p>
           </div>
         </div>
       </section>
 
       {/* Contact Credits */}
-      <section id="credits" className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 32px 48px" }}>
+      <section id="credits" className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "36px 32px 48px" }}>
         <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.4px", color: "#0D1117", marginBottom: 6 }}>Contact Credits</h2>
           <p style={{ fontSize: 13.5, color: "#6B7280" }}>Use credits to unlock verified contact records one supplier at a time.</p>
-          <p role="status" style={{ marginTop: 10, display: "inline-flex", padding: "7px 10px", borderRadius: 7, background: "#FFFBEB", border: "1px solid #FDE68A", color: "#92400E", fontSize: 12 }}>Purchases are temporarily unavailable while payment setup is being completed.</p>
         </div>
         <div className="r3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 16 }}>
           {plans.map((plan) => (
@@ -1975,9 +2001,7 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
                 ))}
               </div>
               <div>
-                <button disabled aria-disabled="true" title="Payment setup in progress" style={{ width: "100%", padding: "9px 0", borderRadius: 8, background: "#F3F4F6", color: "#9CA3AF", fontSize: 13.5, fontWeight: 600, border: "1px solid #E5E7EB", cursor: "not-allowed", marginBottom: plan.note ? 8 : 0 }}>
-                  Coming soon
-                </button>
+                <CheckoutButton plan={plan.name.toLowerCase() === "starter" ? "starter" : plan.name.toLowerCase() === "buyer" ? "buyer" : "pro"} returnTo={returnTo} />
                 {plan.note && <p style={{ fontSize: 11.5, color: "#9CA3AF", textAlign: "center" as const }}>{plan.note}</p>}
               </div>
             </div>
