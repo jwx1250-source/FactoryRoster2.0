@@ -1,6 +1,6 @@
 const linkStyle = { color: "#1E40AF", textDecoration: "none" } as const;
 
-export function Breadcrumbs({ items }: { items: Array<{ name: string; href: string }> }) {
+export function Breadcrumbs({ items, visual = true }: { items: Array<{ name: string; href: string }>; visual?: boolean }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -8,9 +8,9 @@ export function Breadcrumbs({ items }: { items: Array<{ name: string; href: stri
   };
   return (
     <>
-      <nav aria-label="Breadcrumb" style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px 0", fontSize: 12.5, color: "#6B7280" }}>
+      {visual && <nav aria-label="Breadcrumb" style={{ maxWidth: 1280, margin: "0 auto", padding: "14px 32px 0", fontSize: 12.5, color: "#6B7280" }}>
         {items.map((item, index) => <span key={item.href}>{index > 0 && <span aria-hidden="true"> / </span>}{index === items.length - 1 ? <span>{item.name}</span> : <a href={item.href} style={linkStyle}>{item.name}</a>}</span>)}
-      </nav>
+      </nav>}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );

@@ -23,5 +23,5 @@ export default async function FactoryPage({ params }: { params: Promise<{ factor
   const factory = await getPublishedFactory(factorySlug);
   if (!factory) notFound();
   const industry = Array.isArray(factory.industries) ? factory.industries[0] : factory.industries;
-  return <><Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Industries", href: "/industries" }, ...(industry?.slug ? [{ name: industry.name, href: `/industries/${industry.slug}` }] : []), { name: factory.company_name, href: `/factories/${factory.slug}` }]} /><FigmaApp initialPath={`/factories/${factorySlug}`} initialSupplier={factory} /></>;
+  return <><Breadcrumbs visual={false} items={[{ name: "Home", href: "/" }, { name: "Industries", href: "/industries" }, ...(industry?.slug ? [{ name: industry.name, href: `/industries/${industry.slug}` }] : []), { name: factory.company_name, href: `/factories/${factory.slug}` }]} /><FigmaApp initialPath={`/factories/${factorySlug}`} initialSupplier={factory} /></>;
 }
