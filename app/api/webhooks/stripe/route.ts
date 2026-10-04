@@ -7,6 +7,14 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
+function describeError(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    try { return JSON.stringify(error); } catch { return "Unserializable webhook error"; }
+  }
+  return String(error);
+}
+
 async function grantCredits(event: Stripe.Event, session: Stripe.Checkout.Session) {
   const userId = session.metadata?.user_id ?? session.client_reference_id;
   const planSlug = session.metadata?.plan_slug;
@@ -112,13 +120,13 @@ export async function POST(request: Request) {
     console.error("[stripe webhook] processing failed", {
       eventType,
       eventId,
-      message: error instanceof Error ? error.message : String(error),
+      message: describeError(error),
     });
     try {
       await createSupabaseAdminClient().from("stripe_webhook_failures").insert({
         event_id: eventId,
         event_type: eventType,
-        error_message: error instanceof Error ? error.message : String(error),
+        error_message: describeError(error),
       });
     } catch (diagnosticError) {
       console.error("[stripe webhook] failure diagnostic write failed", diagnosticError);
