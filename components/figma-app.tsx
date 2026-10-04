@@ -996,7 +996,7 @@ function ContactRow({ icon: Icon, label, value }: { icon: React.FC; label: strin
   );
 }
 
-function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResult; fromQuery: string; onBack: () => void }) {
+function FactoryDetailPage({ factory, fromQuery }: { factory: SearchResult; fromQuery: string }) {
   const router = useRouter();
   const [profile, setProfile] = useState<Record<string, unknown> | null>(factory.profile ?? null);
   const [profileError, setProfileError] = useState("");
@@ -1105,15 +1105,21 @@ function FactoryDetailPage({ factory, fromQuery, onBack }: { factory: SearchResu
     <div style={{ minHeight: "100vh", background: "#F7F8FA" }}>
       {/* Breadcrumb */}
       <div style={{ background: "#fff", borderBottom: "1px solid #E9ECF1", padding: "12px 32px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 500, color: "#6B7280", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-            <ChevronLeft />Back to results
-          </button>
-          <span style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
-          <Mono color="#9CA3AF">{factory.industry}</Mono>
-          <span style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
-          <Mono color="#6B7280">{factory.name}</Mono>
-        </div>
+        <nav aria-label="Breadcrumb" style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <Link href="/" style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>Home</Link>
+          <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
+          <Link href="/industries" style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>Industries</Link>
+          {factory.industrySlug && <>
+            <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
+            <Link href={`/industries/${factory.industrySlug}`} style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>{factory.industry}</Link>
+          </>}
+          {factory.secondaryCategorySlug && <>
+            <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
+            <Link href={`/industries/${factory.secondaryCategorySlug}`} style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>{factory.secondaryCategories?.[0]}</Link>
+          </>}
+          <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
+          <span style={{ fontSize: 12.5, color: "#6B7280" }}>{factory.name}</span>
+        </nav>
       </div>
 
       {/* Supplier header */}
@@ -3417,7 +3423,6 @@ export default function App({ initialPath = "/", initialSupplier }: { initialPat
         <FactoryDetailPage
           factory={page.factory}
           fromQuery={page.fromQuery}
-          onBack={() => page.fromQuery ? goResults(page.fromQuery) : goHome()}
         />
       )}
 
