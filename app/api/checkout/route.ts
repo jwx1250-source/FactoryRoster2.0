@@ -34,7 +34,13 @@ export async function POST(request: Request) {
     const returnTo = safeReturnPath(input.return_to);
     const supabase = await createSupabaseServerClient();
     const { data: profile } = await supabase.from("profiles").select("stripe_customer_id").eq("user_id", user.id).maybeSingle();
-    const siteUrl = getSiteUrl();
+    // Payment return URLs must use the branded production domain. Preview and
+    // Vercel deployment hosts are implementation details and should not leak
+    // into customer-facing Checkout redirects.
+    const requestUrl = new URL(request.url);
+    const siteUrl = requestUrl.hostname === "localhost" || requestUrl.hostname === "127.0.0.1"
+      ? requestUrl.origin
+      : getSiteUrl();
     const stripe = getStripe();
     let customerId = profile?.stripe_customer_id ?? undefined;
     if (!customerId) {
