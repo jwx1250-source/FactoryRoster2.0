@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { builtInGuides, guideClusters, guideRoadmap, mergeGuides } from "../lib/guides";
+import { builtInGuides, calculateGuideReadTime, guideClusters, guideRoadmap, mergeGuides } from "../lib/guides";
 
 describe("FactoryRoster Knowledge Hub", () => {
   it("defines the seven sourcing-stage clusters and a 24-guide roadmap", () => {
     expect(guideClusters).toHaveLength(7);
-    expect(guideRoadmap).toHaveLength(24);
-    expect(new Set(guideRoadmap.map((guide) => guide.slug)).size).toBe(24);
+    expect(guideRoadmap).toHaveLength(30);
+    expect(new Set(guideRoadmap.map((guide) => guide.slug)).size).toBe(30);
   });
 
   it("publishes the six verification-focused guides without empty content", () => {
-    expect(builtInGuides).toHaveLength(6);
+    expect(builtInGuides).toHaveLength(12);
     expect(builtInGuides.every((guide) => guide.sections && guide.sections.length >= 5)).toBe(true);
     expect(builtInGuides.map((guide) => guide.slug)).toEqual(expect.arrayContaining([
       "how-to-verify-a-chinese-supplier",
@@ -18,7 +18,18 @@ describe("FactoryRoster Knowledge Hub", () => {
       "how-to-verify-a-chinese-business-license",
       "china-supplier-scam-red-flags",
       "how-factory-verification-works",
+      "how-to-find-manufacturers-in-china",
+      "how-to-contact-chinese-manufacturers",
+      "how-to-write-an-rfq",
+      "moq-explained",
+      "how-to-order-samples-from-china",
+      "fob-vs-exw-vs-ddp",
     ]));
+  });
+
+  it("calculates structured guide read time from content instead of trusting a hand-written label", () => {
+    expect(calculateGuideReadTime({ content: "one two three four five" })).toBe(1);
+    expect(calculateGuideReadTime({ content: Array.from({ length: 441 }, () => "word").join(" ") })).toBe(3);
   });
 
   it("merges Supabase rows by slug and never emits duplicate cards", () => {

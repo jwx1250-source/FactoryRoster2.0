@@ -13,6 +13,7 @@ export type GuideSection = {
   bullets?: string[];
   numbered?: string[];
   checklist?: string[];
+  comparisonTable?: { headers: string[]; rows: string[][] };
   callout?: string;
 };
 
@@ -30,6 +31,7 @@ export type GuideRecord = {
   sections?: GuideSection[];
   content?: string;
   source: "built-in" | "supabase";
+  socialHooks?: string[];
 };
 
 export type GuideDatabaseRow = {
@@ -80,6 +82,12 @@ export const guideRoadmap: Array<{ slug: string; title: string; clusterId: Guide
   { slug: "how-to-work-with-a-china-supplier", title: "How to Work with a China Supplier", clusterId: "operations", status: "planned" },
   { slug: "china-supplier-order-process", title: "China Supplier Order Process", clusterId: "operations", status: "planned" },
   { slug: "use-verified-factory-contacts", title: "How to Use Verified Factory Contacts", clusterId: "operations", status: "existing" },
+  { slug: "how-to-find-manufacturers-in-china", title: "How to Find Manufacturers in China", clusterId: "discovery", status: "published" },
+  { slug: "how-to-contact-chinese-manufacturers", title: "How to Contact Chinese Manufacturers", clusterId: "communication", status: "published" },
+  { slug: "how-to-write-an-rfq", title: "How to Write an RFQ", clusterId: "communication", status: "published" },
+  { slug: "moq-explained", title: "MOQ Explained", clusterId: "commercial", status: "published" },
+  { slug: "how-to-order-samples-from-china", title: "How to Order Samples from China", clusterId: "operations", status: "published" },
+  { slug: "fob-vs-exw-vs-ddp", title: "FOB vs EXW vs DDP", clusterId: "commercial", status: "published" },
 ];
 
 const commonCta: GuideSection[] = [
@@ -217,8 +225,118 @@ const verificationGuides: GuideRecord[] = [
   },
 ];
 
-export const builtInGuides = verificationGuides;
-export const publishedBuiltInGuides = builtInGuides.filter((guide) => guideRoadmap.some((item) => item.slug === guide.slug && item.status !== "planned"));
+const secondBatchGuides: GuideRecord[] = [
+  {
+    slug: "how-to-find-manufacturers-in-china", title: "How to Find Manufacturers in China", topic: "Find Suppliers", clusterId: "discovery",
+    summary: "A practical workflow for defining a product, finding relevant manufacturers, comparing capability, and building a shortlist before payment.", readTime: 10,
+    seoTitle: "How to Find Manufacturers in China | FactoryRoster", seoDescription: "Learn where to find Chinese manufacturers, how to compare supplier fit, and how to verify a shortlist before payment.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    sections: [
+      { heading: "The short answer", paragraphs: ["Finding a manufacturer in China is not one search. The process is: define the product → identify sourcing channels → build a longlist → verify supplier type → compare capability → request samples and RFQs → shortlist → verify before payment."] },
+      { heading: "Define the product before searching", paragraphs: ["Write down the product category, material, dimensions, target quantity, MOQ tolerance, packaging, customization, compliance market, destination country, target price range, and timeline. A vague request produces vague quotes because suppliers make different assumptions about materials, finish, packaging, and quantity. A clear brief lets you compare like with like and quickly see which suppliers are not a fit."] },
+      { heading: "Where to find manufacturers", bullets: ["Alibaba can provide broad international discovery and platform-native communication.", "1688 can expose China-market suppliers, but buyers may need translation, local payment, and export support.", "Made-in-China and Global Sources can be useful for category discovery and export-oriented suppliers.", "Trade fairs, the Canton Fair, and industry clusters can provide direct conversations and factory context.", "Google, sourcing directories, customs/import databases, referrals, sourcing agents, and existing buyer networks each reveal different parts of the market."], callout: "No channel is automatically best. Match the channel to your language, order size, product complexity, need for export support, and ability to verify the supplier." },
+      { heading: "Use FactoryRoster as a research layer", paragraphs: ["FactoryRoster is useful when the buyer wants to research supplier identity, supplier type, verification evidence, industries, and verified contact intelligence. It is one research input, not the only sourcing channel and not a substitute for samples, contracts, inspections, or payment diligence."] },
+      { heading: "Manufacturer or trading company?", paragraphs: ["A manufacturer may be the better fit for repeat production, tooling, or private label. A trading company, exporter, distributor, or wholesaler may be more suitable for low MOQ, mixed products, existing inventory, or export coordination. Compare the claimed supplier type with the evidence; do not treat a trading supplier as a factory. Read the detailed comparison in Manufacturer vs Trading Company in China before making a decision."] },
+      { heading: "Build a supplier longlist", numbered: ["Collect 10–20 candidates from three or four channels.", "Remove profiles with an unclear legal entity, mismatched product scope, or no workable contact path.", "Select about five serious candidates for the same RFQ.", "Choose two or three sample candidates after comparing fit, not just price.", "Move one or two suppliers forward only after evidence, sample, and commercial checks."], callout: "These are useful example ranges, not universal rules. Quality of fit matters more than a fixed number of suppliers." },
+      { heading: "What to compare", bullets: ["Legal entity, supplier type, and product specialization.", "MOQ, customization, sample support, lead time, and export-market experience.", "Certifications and quality process relevant to the exact product and destination market.", "Communication quality, quotation completeness, payment terms, and responsiveness.", "Whether the supplier can explain production, packaging, inspection, and after-sales responsibilities."] },
+      { heading: "An 8-step manufacturer search workflow", numbered: ["Define the product and destination requirements.", "Search three or four sourcing channels.", "Build a longlist and record the same fields for every candidate.", "Verify company identity and supplier type.", "Send one clear RFQ with quantity and specifications.", "Compare written quotes, samples, and unanswered questions.", "Shortlist suppliers and unlock contact only when there is a clear reason to reach out.", "Verify the supplier, contract entity, beneficiary, sample, and payment sequence before committing." ] },
+      { heading: "Red flags that deserve a second check", bullets: ["The supplier claims it can make everything.", "The price is far below comparable quotes without a clear assumption.", "The company refuses legal information or gives inconsistent names.", "Production claims are vague and media looks copied or unrelated.", "The supplier pressures you to pay before specifications are clear.", "There is no reasonable sample, inspection, or quality process."], callout: "A red flag is not automatic proof of a scam. It is a signal to pause, ask a precise question, and verify through another channel." },
+      { heading: "Verification limitations", paragraphs: ["FactoryRoster verification confirms specific facts at a point in time. It does not guarantee product quality, pricing, delivery, compliance, or transaction outcomes. Buyers should continue with product validation, written contracts, inspection, secure payment controls, and professional advice where appropriate."] },
+      ...commonCta,
+    ],
+  },
+  {
+    slug: "how-to-contact-chinese-manufacturers", title: "How to Contact Chinese Manufacturers", topic: "Contact & RFQ", clusterId: "communication",
+    summary: "Write a short, specific first message that gives a Chinese manufacturer enough information to answer usefully.", readTime: 8,
+    seoTitle: "How to Contact Chinese Manufacturers | First Message Guide", seoDescription: "Learn what to include in a first supplier message, how to follow up, and when to use email, Alibaba, WhatsApp, or WeChat.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    sections: [
+      { heading: "The short answer", paragraphs: ["A good first supplier message is short, specific, and easy to answer. It explains who you are, what product you need, the key specification, quantity, destination, customization, questions, and next step."] },
+      { heading: "What suppliers need from you", bullets: ["Product, quantity, specification, material, and dimensions.", "Target market, packaging, branding, sample request, expected timeline, and shipping destination.", "Any compliance or labeling requirements that affect the quote."] },
+      { heading: "A weak opening", paragraphs: ["“Hi, send catalog and best price.” This gives the supplier no quantity, product definition, market, or commercial assumptions. The reply is likely to be a generic catalog or an incomparable headline price—not because every supplier is poor, but because the request is incomplete."] },
+      { heading: "A copyable first message", callout: "Hello,\n\nWe are sourcing [product] for [market].\n\nInitial requirement:\n- Product: [name/reference]\n- Material/spec: [details]\n- Quantity: [quantity]\n- Packaging: [standard or custom]\n- Destination: [country/city]\n\nPlease confirm:\n1. MOQ\n2. Unit price and price basis\n3. Sample cost and timing\n4. Production lead time\n5. Customization options\n6. Relevant certifications\n\nPlease also confirm whether you are the manufacturer, distributor, exporter, or trading company.\n\nThank you." },
+      { heading: "Email, Alibaba, WhatsApp, and WeChat", bullets: ["Email works well for formal requirements, drawings, photos, and a record that can be forwarded internally.", "Alibaba is useful for platform-native communication and keeping the initial inquiry in one marketplace context.", "WhatsApp or WeChat can be efficient for fast follow-up, photos, and short operational questions.", "Keep key commercial information in a saved, reviewable record even if the conversation moves to chat."] },
+      { heading: "Questions to ask first", numbered: ["What is the MOQ and how is it calculated?", "What is the price basis and what is included?", "What is the sample cost and timing?", "What is the realistic production lead time?", "What customization is available?", "Are you the manufacturer or another supplier type?", "Which export markets do you serve?", "What payment terms do you use?"] },
+      { heading: "Follow-up templates", bullets: ["No reply: “Following up on the [product] request below. Could you confirm MOQ, sample timing, and whether you can quote for [quantity] to [destination]?”", "Incomplete reply: “Thank you. To compare this quote, could you also confirm material, packaging, lead time, and the price basis?”", "Vague answer: “Could you answer the numbered questions one by one? If a point is not available, please mark it as pending.”"] },
+      { heading: "Avoid these mistakes", bullets: ["Sending the same generic copy to hundreds of suppliers.", "Asking only for the lowest price while hiding quantity and destination.", "Requesting an NDA before sharing a useful product brief.", "Sending huge attachments immediately or negotiating before the specification is clear."] },
+      ...commonCta,
+    ],
+  },
+  {
+    slug: "how-to-write-an-rfq", title: "How to Write an RFQ", topic: "Contact & RFQ", clusterId: "communication",
+    summary: "A practical RFQ structure and copyable template for getting supplier quotes you can actually compare.", readTime: 10,
+    seoTitle: "How to Write an RFQ for Chinese Manufacturers", seoDescription: "Learn what a China supplier RFQ should contain, with a copyable template and response comparison checklist.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in", socialHooks: ["The 12 fields every China RFQ should include", "Why send me your best price gets bad supplier quotes", "A copy-paste RFQ template for Chinese manufacturers"],
+    sections: [
+      { heading: "The short answer", paragraphs: ["An RFQ turns a sourcing idea into a comparable request for quotation. It should give suppliers enough detail to price the same product, quantity, packaging, delivery assumptions, and timing. It is more specific than a casual inquiry, but it is not a purchase order or a promise to buy."] },
+      { heading: "Inquiry, RFQ, and purchase order", bullets: ["An inquiry opens a conversation and tests general fit.", "An RFQ asks for a structured price and commercial response against known assumptions.", "A purchase order is a later buying instruction governed by the agreed commercial documents. The exact legal effect depends on the parties and contract."] },
+      { heading: "What an RFQ should contain", checklist: ["Buyer or company introduction", "Product name and reference", "Drawing, photo, or reference sample", "Dimensions, materials, and relevant tolerances", "Quantity and forecast assumptions", "MOQ question", "Sample requirements", "Packaging and branding", "Compliance or documentation needs", "Destination country and city", "Requested shipping term", "Lead time, payment terms, and quotation validity"] },
+      { heading: "Copyable RFQ template", callout: "Subject: RFQ — Custom Stainless Steel Bottle for [Market]\n\nHello,\n\nWe are sourcing custom stainless steel bottles for [market]. Please quote based on the information below.\n\nProduct: double-wall stainless steel bottle\nReference: [photo or drawing attached]\nMaterial: [grade if known]\nCapacity/dimensions: [details]\nQuantity: [initial quantity] with possible repeat orders\nColors/logo: [requirements]\nPackaging: [standard or custom box]\nDestination: [country/city]\nRequested shipping term: [state the term and named place if known]\nTarget sample date: [date]\n\nPlease confirm:\n1. MOQ and how it is calculated\n2. Unit price and price basis\n3. Sample fee, tooling, and timing\n4. Production lead time\n5. Packaging and branding options\n6. Available compliance documents\n7. Payment terms\n8. Quotation validity\n\nPlease identify whether you are the manufacturer, distributor, exporter, or trading company.\n\nThank you." },
+      { heading: "Example: compare the responses", comparisonTable: { headers: ["Question", "Supplier A", "Supplier B", "Supplier C"], rows: [["MOQ", "500 pcs", "1,000 pcs per color", "300 pcs with setup fee"], ["Sample", "$45 / 10 days", "Free sample / 18 days", "$30 / 7 days"], ["Lead time", "35 days", "28 days", "45 days"], ["Packaging", "Standard included", "Custom + setup", "Not included"], ["Payment", "30/70", "50/50", "Not stated"]] } },
+      { heading: "How many suppliers should receive an RFQ?", paragraphs: ["Five to ten qualified suppliers can be a useful starting range for a new product, but there is no universal rule. Quality of fit matters more than sending the request to a large number of unqualified contacts. Use the same assumptions so the responses are comparable."] },
+      { heading: "Common mistakes", bullets: ["Incomplete specifications or no quantity.", "Asking only “best price.”", "No destination or unclear shipping term.", "Mixing a sample quote with a production quote.", "Ignoring tooling, packaging, compliance, or quotation validity.", "Comparing quotes that use different assumptions."] },
+      ...commonCta,
+    ],
+  },
+  {
+    slug: "moq-explained", title: "MOQ Explained", topic: "MOQ, Pricing & Negotiation", clusterId: "commercial",
+    summary: "Understand how Minimum Order Quantity is calculated, why packaging can change the real MOQ, and how to negotiate a smaller trial order.", readTime: 8,
+    seoTitle: "MOQ Explained: China Supplier Minimum Order Quantity", seoDescription: "Learn how Chinese suppliers calculate MOQ for products, colors, packaging, materials, and production runs, with negotiation examples.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    sections: [
+      { heading: "The short answer", paragraphs: ["MOQ means Minimum Order Quantity, but the unit is not always a simple number of pieces. A supplier may calculate MOQ by pieces, cartons, color, size, SKU, material batch, production run, or packaging component. Always ask how the quoted MOQ is calculated."] },
+      { heading: "Why manufacturers have MOQ", bullets: ["Raw-material MOQ from upstream suppliers.", "Machine setup, tooling, labor setup, printing, and production efficiency.", "Packaging minimums and supplier requirements upstream.", "The economics of changeovers, quality checks, and freight preparation."] },
+      { heading: "Product MOQ versus packaging MOQ", paragraphs: ["A product may have a 500-piece MOQ while a custom printed box has a 1,000-unit MOQ. The result can be a 1,000-piece practical order, a packaging surcharge, or standard packaging for the first run. Ask for product MOQ, per-color or per-SKU MOQ, and packaging MOQ separately."] },
+      { heading: "Illustrative examples", bullets: ["T-shirt: 500 pieces total, with 100 pieces per color.", "Bottle: 1,000 pieces per color for a custom finish.", "Custom box: 1,000 packaging units even if the product run is smaller.", "These are illustrative examples only, not fixed industry standards."] },
+      { heading: "Can MOQ be negotiated?", numbered: ["Use stock materials and standard colors.", "Use standard packaging for a trial order.", "Accept a higher unit price for a smaller run.", "Combine variants where the supplier can run them together.", "Reuse existing tooling instead of requesting a new mold.", "Ask for a trial order and make any forecast or repeat commitment carefully."] },
+      { heading: "A short MOQ negotiation script", callout: "We are testing this product with an initial order of [quantity]. Could you quote two options: your standard MOQ and a smaller trial run using stock material and standard packaging? Please show any setup fee, higher unit price, and the MOQ for each color or SKU." },
+      { heading: "MOQ versus MOV", paragraphs: ["MOQ is Minimum Order Quantity. MOV is Minimum Order Value. A supplier may accept a low piece count if the order reaches a minimum dollar value, or may require both an item MOQ and an order-value threshold. Confirm which rule applies to your quote."] },
+      { heading: "MOQ traps", bullets: ["Headline MOQ differs from customized MOQ.", "Sample quantity is confused with production MOQ.", "Per-color, per-SKU, material, and hidden packaging minimums.", "“Low MOQ” paired with a high setup fee or a different price basis."] },
+      ...commonCta,
+    ],
+  },
+  {
+    slug: "how-to-order-samples-from-china", title: "How to Order Samples from China", topic: "Samples, Quality & Inspection", clusterId: "operations",
+    summary: "Use samples to align specifications, test communication, and create a quality benchmark before a production order.", readTime: 9,
+    seoTitle: "How to Order Samples from China", seoDescription: "Learn sample types, fees, shipping, approval records, comparison criteria, and red flags when sourcing from China.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    sections: [
+      { heading: "The short answer", paragraphs: ["A sample is a product and communication test, not proof that a supplier will always deliver identical quality. Use it to evaluate the product, align specifications, test packaging, compare suppliers, and create a written benchmark for later production."] },
+      { heading: "Sample types", bullets: ["Off-the-shelf sample: an existing product used for initial evaluation.", "Customized sample: a product adjusted for material, color, logo, or packaging.", "Prototype: an early design or engineering version.", "Pre-production sample: a version made before a production run.", "Golden or approved sample: the agreed benchmark retained for comparison."] },
+      { heading: "Information to include in a sample request", checklist: ["SKU or product reference", "Specification and material", "Dimensions and tolerances where relevant", "Color and logo", "Packaging and labeling", "Quantity", "Shipping address", "Courier preference or account details if relevant"] },
+      { heading: "Sample fees and shipping", paragraphs: ["A sample can cost more per unit than a production order because setup, labor, customization, and courier handling are spread over a small quantity. There is no universal rule that samples must be free. Ask what is refundable, what is included, and what changes if a custom sample is required. DHL, FedEx, UPS, a supplier courier account, or a buyer courier account may be used; confirm current charges directly rather than relying on old rates."] },
+      { heading: "How to compare samples", bullets: ["Appearance, dimensions, material, function, finish, packaging, labeling, defects, consistency, and documentation.", "Photograph the sample and record measurements, test notes, and the exact revision.", "Compare samples against the same written requirement, not memory or a marketing photograph."] },
+      { heading: "Approval records", paragraphs: ["Record the date, supplier, version, photos, dimensions, test notes, and approved changes. A verbal “looks good” is not a reliable production benchmark. Mark the sample approved, revised, or rejected and keep the approved version available for later inspection."] },
+      { heading: "Sample red flags", bullets: ["The supplier refuses a reasonable sample without explaining why.", "The sample differs from the quoted specification.", "Branding, dimensions, or materials change without explanation.", "Certificates do not relate to the sample or product.", "The supplier pressures you to order before approval."] },
+      ...commonCta,
+    ],
+  },
+  {
+    slug: "fob-vs-exw-vs-ddp", title: "FOB vs EXW vs DDP", topic: "Shipping & Import", clusterId: "commercial",
+    summary: "A practical comparison of EXW, FOB, and DDP responsibilities, questions, and trade-offs for China sourcing decisions.", readTime: 10,
+    seoTitle: "FOB vs EXW vs DDP for China Sourcing", seoDescription: "Compare EXW, FOB, and DDP responsibilities, freight control, import questions, and common mistakes when buying from China.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    sections: [
+      { heading: "The short answer", paragraphs: ["EXW generally leaves the buyer with more transport responsibility from the seller's premises. FOB generally covers seller delivery through the named port and onboard stage for sea or inland waterway transport. DDP generally gives the seller extensive delivery responsibility to the named destination, including import clearance and duties under the Incoterm framework. The named place, transport mode, contract, and local rules still matter."] },
+      { heading: "At-a-glance comparison", comparisonTable: { headers: ["Question", "EXW", "FOB", "DDP"], rows: [["Seller responsibility", "Goods available at premises", "Export-side delivery to named port/onboard stage", "Extensive delivery to named destination"], ["Export clearance", "Usually buyer responsibility", "Seller responsibility under the agreed term", "Seller responsibility under the agreed term"], ["Main freight", "Buyer", "Usually buyer", "Usually seller arranges"], ["Import clearance", "Buyer", "Buyer", "Seller framework responsibility; confirm who acts"], ["Duties/taxes", "Buyer", "Buyer", "Seller framework responsibility; confirm treatment"], ["Control", "High buyer control", "Shared with buyer-controlled main freight", "More seller-managed"], ["Common fit", "Experienced logistics buyer or pickup/consolidation", "Sea/inland waterway buyers wanting freight control", "Convenience where seller import capability is clear"]] } },
+      { heading: "EXW explained", paragraphs: ["EXW can offer buyer control over pickup, consolidation, and the main freight decision, but the buyer may also carry more export-side logistics and documentation complexity. Ask who loads, who handles export clearance, and which local charges are excluded."] },
+      { heading: "FOB explained", paragraphs: ["FOB is associated with a named port and sea or inland waterway transport context. Confirm the named port, export clearance, loading/on-board responsibility, origin charges, and which party controls the main freight. Avoid vague wording such as “FOB factory.”"] },
+      { heading: "DDP explained", paragraphs: ["DDP can be convenient because the seller manages more of the delivery chain, but convenience does not remove questions. Ask who performs import clearance, who is importer of record, what duties and taxes are included, and which destination charges may remain. Confirm that the seller can legally and operationally handle the destination requirements."] },
+      { heading: "Which should a beginner choose?", paragraphs: ["There is no universal best term. Consider freight experience, customs capability, shipment size, need for control, transparency, destination compliance, and your forwarder relationship. A lower unit price under EXW may not be cheaper after logistics; a DDP quote may hide assumptions that need to be documented."] },
+      { heading: "Questions to ask a supplier", bullets: ["What named place or port applies?", "Is export clearance included?", "Is main freight included?", "Who performs import clearance?", "Are duties and taxes included?", "Who is importer of record?", "What destination charges may remain?", "Which documents will I receive?", "Which current Incoterm version is used in the contract?"] },
+      { heading: "Commercial boundary", paragraphs: ["Incoterms allocate delivery responsibilities and risk or cost points; they do not replace the sales contract, product compliance requirements, payment terms, insurance decisions, or customs obligations. FactoryRoster is not a freight or legal adviser. Confirm the final term with the supplier and qualified professionals where appropriate."] },
+      ...commonCta,
+    ],
+  },
+];
+
+export const builtInGuides = [...verificationGuides, ...secondBatchGuides];
+
+export function calculateGuideReadTime(guide: Pick<GuideRecord, "sections" | "content">) {
+  const text = guide.sections
+    ? guide.sections.flatMap((section) => [section.heading, ...(section.paragraphs ?? []), ...(section.bullets ?? []), ...(section.numbered ?? []), ...(section.checklist ?? []), section.callout ?? ""]).join(" ")
+    : guide.content ?? "";
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(wordCount / 220));
+}
+
+export const publishedBuiltInGuides = builtInGuides
+  .filter((guide) => guideRoadmap.some((item) => item.slug === guide.slug && item.status !== "planned"))
+  .map((guide) => ({ ...guide, readTime: calculateGuideReadTime(guide) }));
 
 // These are fallback records for legacy URLs. Supabase remains the source of
 // truth when those rows exist, but a temporary database outage must not turn

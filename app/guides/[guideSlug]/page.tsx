@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ guideSlug
   const { guideSlug } = await params;
   const guide = await getGuide(guideSlug);
   if (!guide) return { title: "Guide not found", robots: { index: false, follow: false } };
-  return { title: guide.seoTitle, description: guide.seoDescription, alternates: { canonical: `${siteUrl}/guides/${guide.slug}` }, openGraph: { title: guide.seoTitle, description: guide.seoDescription, url: `${siteUrl}/guides/${guide.slug}`, type: "article", publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt || guide.publishedAt }, twitter: { card: "summary", title: guide.seoTitle, description: guide.seoDescription } };
+  return { title: guide.seoTitle, description: guide.seoDescription, alternates: { canonical: `${siteUrl}/guides/${guide.slug}` }, openGraph: { title: guide.seoTitle, description: guide.seoDescription, url: `${siteUrl}/guides/${guide.slug}`, type: "article", publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt || guide.publishedAt }, twitter: { card: "summary_large_image", title: guide.seoTitle, description: guide.seoDescription } };
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ guideSlug: string }> }) {

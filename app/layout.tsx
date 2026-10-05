@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "FactoryRoster — Verified China Suppliers",
     description: "China Supplier Intelligence · Verified Before Listed",
   },

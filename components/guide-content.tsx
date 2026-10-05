@@ -20,6 +20,7 @@ function Section({ section }: { section: GuideSection }) {
     {section.bullets && <ul>{section.bullets.map((item) => <li key={item}>{item}</li>)}</ul>}
     {section.numbered && <ol>{section.numbered.map((item) => <li key={item}>{item}</li>)}</ol>}
     {section.checklist && <><ChecklistTools items={section.checklist} /><ul className="guide-checklist">{section.checklist.map((item) => <li key={item}><span aria-hidden="true">☐</span>{item}</li>)}</ul></>}
+    {section.comparisonTable && <div className="guide-table-wrap"><table className="guide-table"><thead><tr>{section.comparisonTable.headers.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{section.comparisonTable.rows.map((row) => <tr key={row.join("|")}>{row.map((cell, index) => <td key={`${index}-${cell}`}>{cell}</td>)}</tr>)}</tbody></table></div>}
     {section.callout && <aside className="guide-callout">{section.callout}</aside>}
   </section>;
 }

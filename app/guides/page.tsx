@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { guideClusters, guideRoadmap, mergeGuides, type GuideDatabaseRow } from "@/lib/guides";
+import { guideClusters, guideRoadmap, mergeGuides, type GuideDatabaseRow, type GuideRecord } from "@/lib/guides";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -22,8 +22,9 @@ async function getGuides() {
 
 export default async function GuidesPage() {
   const guides = await getGuides();
-  const startHere = ["how-to-verify-a-chinese-supplier", "chinese-supplier-verification-checklist", "find-verified-china-manufacturers"].map((slug) => guides.find((guide) => guide.slug === slug)).filter(Boolean);
-  const popular = guides.filter((guide) => !startHere.some((item) => item?.slug === guide.slug)).slice(0, 6);
+  const startHere = ["how-to-find-manufacturers-in-china", "how-to-verify-a-chinese-supplier", "how-to-contact-chinese-manufacturers", "how-to-write-an-rfq"].map((slug) => guides.find((guide) => guide.slug === slug)).filter((guide): guide is GuideRecord => Boolean(guide));
+  const popularSlugs = ["chinese-supplier-verification-checklist", "china-supplier-scam-red-flags", "how-to-write-an-rfq", "moq-explained", "how-to-order-samples-from-china", "fob-vs-exw-vs-ddp"];
+  const popular = popularSlugs.map((slug) => guides.find((guide) => guide.slug === slug)).filter((guide): guide is GuideRecord => Boolean(guide));
   const grouped = new Map(guideClusters.map((cluster) => [cluster.id, guides.filter((guide) => guide.clusterId === cluster.id)]));
 
   return <main className="guides-hub">
