@@ -21,7 +21,7 @@ describe("FactoryRoster Knowledge Hub", () => {
   });
 
   it("publishes the six verification-focused guides without empty content", () => {
-    expect(builtInGuides).toHaveLength(18);
+    expect(builtInGuides).toHaveLength(24);
     expect(builtInGuides.every((guide) => guide.sections && guide.sections.length >= 5)).toBe(true);
     expect(builtInGuides.map((guide) => guide.slug)).toEqual(expect.arrayContaining([
       "how-to-verify-a-chinese-supplier",
@@ -42,6 +42,12 @@ describe("FactoryRoster Knowledge Hub", () => {
       "pre-shipment-inspection-checklist",
       "shipping-from-china",
       "landed-cost-explained",
+      "aql-inspection-explained",
+      "china-freight-forwarder-guide",
+      "import-duties-from-china",
+      "canton-fair-beginner-guide",
+      "yiwu-market-beginner-guide",
+      "shenzhen-electronics-sourcing-guide",
     ]));
   });
 
@@ -88,15 +94,53 @@ describe("FactoryRoster Knowledge Hub", () => {
     const expected: Record<string, string[]> = {
       "how-to-negotiate-moq-with-chinese-suppliers": ["moq-explained", "how-to-write-an-rfq", "how-to-order-samples-from-china"],
       "how-to-order-samples-from-china": ["golden-sample-explained", "china-quality-control-guide"],
-      "china-quality-control-guide": ["golden-sample-explained", "pre-shipment-inspection-checklist", "shipping-from-china"],
-      "pre-shipment-inspection-checklist": ["china-quality-control-guide", "shipping-from-china"],
-      "shipping-from-china": ["fob-vs-exw-vs-ddp", "landed-cost-explained"],
+      "china-quality-control-guide": ["aql-inspection-explained", "pre-shipment-inspection-checklist", "shipping-from-china"],
+      "pre-shipment-inspection-checklist": ["aql-inspection-explained", "shipping-from-china"],
+      "shipping-from-china": ["china-freight-forwarder-guide", "import-duties-from-china", "landed-cost-explained"],
       "landed-cost-explained": ["shipping-from-china", "fob-vs-exw-vs-ddp", "moq-explained"],
     };
     for (const [source, targets] of Object.entries(expected)) {
       const related = getRelatedGuides(bySlug.get(source)!, publishedBuiltInGuides).map((guide) => guide.slug);
       expect(related).toEqual(expect.arrayContaining(targets));
       expect(related).not.toContain("china-supplier-quality-control");
+    }
+  });
+
+  it("publishes the fourth batch with safe clusters and social metadata", () => {
+    const fourthBatch = [
+      ["aql-inspection-explained", "quality"],
+      ["china-freight-forwarder-guide", "shipping"],
+      ["import-duties-from-china", "shipping"],
+      ["canton-fair-beginner-guide", "locations"],
+      ["yiwu-market-beginner-guide", "locations"],
+      ["shenzhen-electronics-sourcing-guide", "locations"],
+    ] as const;
+    for (const [slug, cluster] of fourthBatch) {
+      const guide = builtInGuides.find((item) => item.slug === slug);
+      expect(guide?.clusterId).toBe(cluster);
+      expect(guide?.sections?.length).toBeGreaterThanOrEqual(8);
+      expect(guide?.socialHooks?.length).toBeGreaterThanOrEqual(3);
+      expect(guideRoadmap.find((item) => item.slug === slug)?.status).toBe("published");
+    }
+    expect(new Set(fourthBatch.map(([slug]) => slug)).size).toBe(fourthBatch.length);
+    expect(guideRoadmap.some((item) => item.slug === "china-import-duty-guide")).toBe(false);
+  });
+
+  it("keeps AQL, shipping, and location journeys within published guides", () => {
+    const bySlug = new Map(publishedBuiltInGuides.map((guide) => [guide.slug, guide]));
+    const journeys: Record<string, string[]> = {
+      "aql-inspection-explained": ["china-quality-control-guide", "pre-shipment-inspection-checklist"],
+      "china-freight-forwarder-guide": ["shipping-from-china", "fob-vs-exw-vs-ddp", "import-duties-from-china"],
+      "import-duties-from-china": ["landed-cost-explained", "shipping-from-china", "china-freight-forwarder-guide"],
+      "canton-fair-beginner-guide": ["how-to-find-manufacturers-in-china", "how-to-write-an-rfq", "how-to-verify-a-chinese-supplier"],
+      "yiwu-market-beginner-guide": ["manufacturer-vs-trading-company-china", "china-freight-forwarder-guide", "shipping-from-china"],
+      "shenzhen-electronics-sourcing-guide": ["how-to-find-manufacturers-in-china", "manufacturer-vs-trading-company-china", "china-quality-control-guide"],
+    };
+    for (const [source, targets] of Object.entries(journeys)) {
+      const related = getRelatedGuides(bySlug.get(source)!, publishedBuiltInGuides).map((guide) => guide.slug);
+      expect(related).toEqual(expect.arrayContaining(targets));
+      expect(related.length).toBeLessThanOrEqual(4);
+      expect(new Set(related).size).toBe(related.length);
     }
   });
 
