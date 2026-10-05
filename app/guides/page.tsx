@@ -6,7 +6,7 @@ import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "China Supplier Sourcing Guides",
-  description: "Practical China supplier sourcing, verification, MOQ, communication, and risk-control guides for international buyers.",
+  description: "Practical China supplier sourcing, verification, MOQ, communication, quality, and shipping guides for international buyers.",
   alternates: { canonical: `${siteUrl}/guides` },
   openGraph: { title: "China Supplier Sourcing Guides | FactoryRoster", description: "China Supplier Intelligence · Verified Before Listed", url: `${siteUrl}/guides`, type: "website" },
 };

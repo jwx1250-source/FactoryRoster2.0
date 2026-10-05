@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/seo-navigation";
 import { GuideContent, GuideCtas } from "@/components/guide-content";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getGuideBySlug, guideClusters, mergeGuides, type GuideDatabaseRow, type GuideRecord } from "@/lib/guides";
+import { getGuideBySlug, getRelatedGuides, mergeGuides, type GuideDatabaseRow, type GuideRecord } from "@/lib/guides";
 import { siteUrl } from "@/lib/site";
 
 async function getGuide(slug: string): Promise<GuideRecord | undefined> {
@@ -29,7 +29,8 @@ export async function generateMetadata({ params }: { params: Promise<{ guideSlug
   const { guideSlug } = await params;
   const guide = await getGuide(guideSlug);
   if (!guide) return { title: "Guide not found", robots: { index: false, follow: false } };
-  return { title: guide.seoTitle, description: guide.seoDescription, alternates: { canonical: `${siteUrl}/guides/${guide.slug}` }, openGraph: { title: guide.seoTitle, description: guide.seoDescription, url: `${siteUrl}/guides/${guide.slug}`, type: "article", publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt || guide.publishedAt }, twitter: { card: "summary_large_image", title: guide.seoTitle, description: guide.seoDescription } };
+  const imageUrl = `${siteUrl}/guides/${guide.slug}/opengraph-image`;
+  return { title: guide.seoTitle, description: guide.seoDescription, alternates: { canonical: `${siteUrl}/guides/${guide.slug}` }, openGraph: { title: guide.seoTitle, description: guide.seoDescription, url: `${siteUrl}/guides/${guide.slug}`, type: "article", publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt || guide.publishedAt, images: [{ url: imageUrl, width: 1200, height: 630, alt: guide.title }] }, twitter: { card: "summary_large_image", title: guide.seoTitle, description: guide.seoDescription, images: [imageUrl] } };
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ guideSlug: string }> }) {
@@ -37,10 +38,9 @@ export default async function GuidePage({ params }: { params: Promise<{ guideSlu
   const guide = await getGuide(guideSlug);
   if (!guide) notFound();
   const allGuides = await getAllGuides();
-  const clusterIndex = guideClusters.findIndex((cluster) => cluster.id === guide.clusterId);
-  const nextClusterId = guideClusters[clusterIndex + 1]?.id;
-  const related = allGuides.filter((item) => item.slug !== guide.slug && (item.clusterId === guide.clusterId || item.clusterId === nextClusterId)).sort((a, b) => (a.clusterId === guide.clusterId ? 0 : 1) - (b.clusterId === guide.clusterId ? 0 : 1));
+  const related = getRelatedGuides(guide, allGuides);
   const breadcrumbItems = [{ name: "Home", href: "/" }, { name: "Guides", href: "/guides" }, { name: guide.title, href: `/guides/${guide.slug}` }];
   const articleJsonLd = { "@context": "https://schema.org", "@type": "Article", "@id": `${siteUrl}/guides/${guide.slug}#article`, headline: guide.title, description: guide.summary, datePublished: guide.publishedAt, dateModified: guide.updatedAt || guide.publishedAt, mainEntityOfPage: `${siteUrl}/guides/${guide.slug}`, author: { "@type": "Organization", name: "FactoryRoster", url: siteUrl }, publisher: { "@type": "Organization", name: "FactoryRoster", url: siteUrl } };
-  return <main className="guide-detail"><Breadcrumbs items={breadcrumbItems} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} /><article className="guide-article"><Link className="guide-back" href="/guides">← All sourcing guides</Link><header className="guide-article-header"><p className="admin-kicker">{guide.topic}</p><h1>{guide.title}</h1><p className="guide-summary">{guide.summary}</p><div className="guide-meta"><span>{guide.readTime} min read</span><span>Updated {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(guide.updatedAt || guide.publishedAt))}</span><span>FactoryRoster Knowledge Hub</span></div></header><GuideContent guide={guide} /><GuideCtas related={related} /></article></main>;
+  const publishedLabel = guide.updatedAt ? "Updated" : "Published";
+  return <main className="guide-detail"><Breadcrumbs items={breadcrumbItems} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} /><article className="guide-article"><Link className="guide-back" href="/guides">← All sourcing guides</Link><header className="guide-article-header"><p className="admin-kicker">{guide.topic}</p><h1>{guide.title}</h1><p className="guide-summary">{guide.summary}</p><div className="guide-meta"><span>{guide.readTime} min read</span><span>{publishedLabel} {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(guide.updatedAt || guide.publishedAt))}</span><span>FactoryRoster Knowledge Hub</span></div></header><GuideContent guide={guide} /><GuideCtas related={related} /></article></main>;
 }

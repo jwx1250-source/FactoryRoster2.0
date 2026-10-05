@@ -4,8 +4,9 @@ export type GuideClusterId =
   | "supplier-types"
   | "communication"
   | "commercial"
-  | "risk-control"
-  | "operations";
+  | "quality"
+  | "shipping"
+  | "locations";
 
 export type GuideSection = {
   heading: string;
@@ -48,14 +49,17 @@ export type GuideDatabaseRow = {
 };
 
 export const guideClusters: Array<{ id: GuideClusterId; title: string; description: string }> = [
-  { id: "discovery", title: "Discovery & Shortlisting", description: "Turn a product brief into a focused China supplier shortlist." },
-  { id: "verification", title: "Verification & Due Diligence", description: "Check registration, contacts, supply evidence, and warning signs before outreach." },
-  { id: "supplier-types", title: "Supplier Types & Fit", description: "Choose between manufacturers, distributors, exporters, wholesalers, and agents." },
-  { id: "communication", title: "Communication & RFQs", description: "Ask better questions and make first contact more productive." },
-  { id: "commercial", title: "MOQ, Pricing & Commercial Terms", description: "Compare MOQ, samples, lead times, and quotes without false precision." },
-  { id: "risk-control", title: "Risk Control & Red Flags", description: "Spot avoidable sourcing risks and build a safer review process." },
-  { id: "operations", title: "Orders, Samples & Ongoing Sourcing", description: "Move from a verified contact to a practical supplier workflow." },
+  { id: "discovery", title: "Find Suppliers", description: "Find manufacturers and suppliers, build a shortlist, and understand where to search." },
+  { id: "verification", title: "Verify Suppliers", description: "Check company identity, supplier evidence, business contacts, and risk signals before payment." },
+  { id: "supplier-types", title: "Supplier Types", description: "Understand manufacturers, trading companies, distributors, exporters, wholesalers, and agents." },
+  { id: "communication", title: "Contact & RFQ", description: "Contact suppliers, write better inquiries, and create comparable RFQs." },
+  { id: "commercial", title: "Pricing & Negotiation", description: "Understand MOQ, quotations, payment terms, tooling, pricing, and negotiation trade-offs." },
+  { id: "quality", title: "Samples & Quality", description: "Order and approve samples, define quality expectations, and prepare for inspection." },
+  { id: "shipping", title: "Shipping & Import", description: "Understand Incoterms, freight, landed cost, customs, and import responsibilities." },
+  { id: "locations", title: "Sourcing Locations", description: "Navigate manufacturing hubs, wholesale markets, trade fairs, and major sourcing cities." },
 ];
+
+export const guideJourneyOrder: GuideClusterId[] = ["discovery", "verification", "communication", "commercial", "quality", "shipping"];
 
 export const guideRoadmap: Array<{ slug: string; title: string; clusterId: GuideClusterId; status: "published" | "planned" | "existing" }> = [
   { slug: "find-verified-china-manufacturers", title: "How to Find Verified China Manufacturers", clusterId: "discovery", status: "existing" },
@@ -69,24 +73,21 @@ export const guideRoadmap: Array<{ slug: string; title: string; clusterId: Guide
   { slug: "manufacturer-vs-trading-company-china", title: "Manufacturer vs Trading Company in China", clusterId: "supplier-types", status: "published" },
   { slug: "china-distributor-vs-manufacturer", title: "China Distributor vs Manufacturer", clusterId: "supplier-types", status: "planned" },
   { slug: "exporter-vs-trading-company-china", title: "Exporter vs Trading Company in China", clusterId: "supplier-types", status: "planned" },
-  { slug: "how-to-write-a-china-supplier-rfq", title: "How to Write a China Supplier RFQ", clusterId: "communication", status: "planned" },
   { slug: "questions-to-ask-china-suppliers", title: "Questions to Ask China Suppliers", clusterId: "communication", status: "planned" },
-  { slug: "how-to-contact-chinese-suppliers", title: "How to Contact Chinese Suppliers", clusterId: "communication", status: "planned" },
   { slug: "china-supplier-quote-comparison", title: "How to Compare China Supplier Quotes", clusterId: "commercial", status: "planned" },
-  { slug: "china-supplier-moq-guide", title: "China Supplier MOQ Guide", clusterId: "commercial", status: "planned" },
-  { slug: "china-supplier-sample-order-guide", title: "China Supplier Sample Order Guide", clusterId: "commercial", status: "planned" },
+  { slug: "how-to-negotiate-moq-with-chinese-suppliers", title: "How to Negotiate MOQ with Chinese Suppliers", clusterId: "commercial", status: "planned" },
   { slug: "china-supplier-lead-times", title: "China Supplier Lead Times", clusterId: "commercial", status: "planned" },
-  { slug: "china-sourcing-payment-risk", title: "China Sourcing Payment Risk", clusterId: "risk-control", status: "planned" },
-  { slug: "china-supplier-quality-control", title: "China Supplier Quality Control", clusterId: "risk-control", status: "planned" },
-  { slug: "china-supplier-due-diligence", title: "China Supplier Due Diligence", clusterId: "risk-control", status: "planned" },
-  { slug: "how-to-work-with-a-china-supplier", title: "How to Work with a China Supplier", clusterId: "operations", status: "planned" },
-  { slug: "china-supplier-order-process", title: "China Supplier Order Process", clusterId: "operations", status: "planned" },
-  { slug: "use-verified-factory-contacts", title: "How to Use Verified Factory Contacts", clusterId: "operations", status: "existing" },
+  { slug: "china-sourcing-payment-risk", title: "China Sourcing Payment Risk", clusterId: "verification", status: "planned" },
+  { slug: "china-supplier-quality-control", title: "China Supplier Quality Control", clusterId: "quality", status: "planned" },
+  { slug: "china-supplier-due-diligence", title: "China Supplier Due Diligence", clusterId: "verification", status: "planned" },
+  { slug: "how-to-work-with-a-china-supplier", title: "How to Work with a China Supplier", clusterId: "communication", status: "planned" },
+  { slug: "china-supplier-order-process", title: "China Supplier Order Process", clusterId: "quality", status: "planned" },
+  { slug: "use-verified-factory-contacts", title: "How to Use Verified Factory Contacts", clusterId: "communication", status: "existing" },
   { slug: "how-to-find-manufacturers-in-china", title: "How to Find Manufacturers in China", clusterId: "discovery", status: "published" },
   { slug: "how-to-contact-chinese-manufacturers", title: "How to Contact Chinese Manufacturers", clusterId: "communication", status: "published" },
   { slug: "how-to-write-an-rfq", title: "How to Write an RFQ", clusterId: "communication", status: "published" },
   { slug: "moq-explained", title: "MOQ Explained", clusterId: "commercial", status: "published" },
-  { slug: "how-to-order-samples-from-china", title: "How to Order Samples from China", clusterId: "operations", status: "published" },
+  { slug: "how-to-order-samples-from-china", title: "How to Order Samples from China", clusterId: "quality", status: "published" },
   { slug: "fob-vs-exw-vs-ddp", title: "FOB vs EXW vs DDP", clusterId: "commercial", status: "published" },
 ];
 
@@ -106,7 +107,7 @@ const verificationGuides: GuideRecord[] = [
     seoTitle: "How to Verify a Chinese Supplier Before Buying",
     seoDescription: "Learn how to check a Chinese supplier's registration, contact details, supply evidence, and commercial fit before outreach.",
     publishedAt: "2026-10-05T00:00:00Z",
-    source: "built-in",
+    source: "built-in", socialHooks: ["How to verify a Chinese supplier before you share payment details", "The evidence question every supplier review should ask", "Why a business license is only one part of verification"],
     sections: [
       { heading: "The short answer", paragraphs: ["Verify a Chinese supplier in layers: confirm the legal entity, independently check a working business contact, review evidence that matches the supplier type, and then validate whether the supplier can actually serve your product, MOQ, market, and timeline. A listing or certificate is a starting point, not proof that every order will be successful."] },
       { heading: "1. Start with the exact legal entity", paragraphs: ["Ask for the registered Chinese company name, unified social credit code, registered address, legal representative, and the name used on invoices or contracts. Compare the information across the supplier's website, quotation, bank details, catalog, and any government registration source available to you.", "Do not treat an English trading name as the legal entity. Similar names, group companies, and sales offices can create confusion. Record the entity you actually intend to contract with."] },
@@ -128,7 +129,7 @@ const verificationGuides: GuideRecord[] = [
     seoTitle: "Chinese Supplier Verification Checklist",
     seoDescription: "Downloadable-style checklist for verifying a Chinese supplier's legal identity, contacts, evidence, products, and commercial fit.",
     publishedAt: "2026-10-05T00:00:00Z",
-    source: "built-in",
+    source: "built-in", socialHooks: ["A printable Chinese supplier verification checklist", "The 10 checks to complete before a supplier shortlist", "What to mark verified, pending, or unresolved"],
     sections: [
       { heading: "The short answer", paragraphs: ["A useful supplier checklist separates facts you can verify from claims you still need to test. Start with the legal entity and business contact, then review supply evidence appropriate to the supplier type. Finish with product, MOQ, sample, export, and payment questions before moving a supplier into an active buying process."] },
       { heading: "Printable verification checklist", checklist: ["Legal Chinese company name confirmed", "Unified Social Credit Code recorded", "Registered address checked", "Contract entity matches the quotation", "Bank beneficiary reviewed", "Supplier type and supply model confirmed", "Business contact independently checked", "Supply evidence matches the claimed supplier type", "MOQ, sample, lead time, and export fit recorded", "Open questions marked pending or unresolved"] },
@@ -151,7 +152,7 @@ const verificationGuides: GuideRecord[] = [
     seoTitle: "Manufacturer vs Trading Company in China",
     seoDescription: "Compare Chinese manufacturers and trading companies by MOQ, product range, communication, supply evidence, and order fit.",
     publishedAt: "2026-10-05T00:00:00Z",
-    source: "built-in",
+    source: "built-in", socialHooks: ["Factory or trading company? Ask this before shortlisting", "How supplier type changes the evidence you need", "The difference between production evidence and supply-chain evidence"],
     sections: [
       { heading: "The short answer", paragraphs: ["A manufacturer makes products or controls production; a trading company coordinates supply from one or more manufacturers. Neither model is automatically better. Choose based on order size, product complexity, required customization, speed, communication, export support, and the evidence you can verify."] },
       { heading: "What a manufacturer may be best for", bullets: ["Repeatable products, custom tooling, process control, or private label at a suitable volume.", "A buyer who can manage technical specifications, samples, inspections, and production timelines.", "Direct visibility into production evidence when the factory relationship is real and current."] },
@@ -172,7 +173,7 @@ const verificationGuides: GuideRecord[] = [
     seoTitle: "How to Verify a Chinese Business License",
     seoDescription: "A practical guide to comparing Chinese business-license details with supplier quotes, contracts, contacts, and payment instructions.",
     publishedAt: "2026-10-05T00:00:00Z",
-    source: "built-in",
+    source: "built-in", socialHooks: ["How to compare a Chinese business license with payment details", "The company-name mismatch that deserves a pause", "What a Chinese business license cannot prove"],
     sections: [
       { heading: "The short answer", paragraphs: ["Verify the legal name, unified social credit code, legal representative, registered address, business scope, and status shown on the license or registration record. Compare them to the entity on the quotation, contract, invoice, bank account, website, and contact signature. Resolve mismatches before sending a deposit."] },
       { heading: "Details to record", bullets: ["Chinese legal entity name and any translated name.", "Unified social credit code.", "Registration status and dates.", "Legal representative.", "Registered address and business scope.", "Whether the business scope reasonably covers the goods or services discussed."] },
@@ -186,13 +187,13 @@ const verificationGuides: GuideRecord[] = [
     slug: "china-supplier-scam-red-flags",
     title: "China Supplier Scam Red Flags",
     topic: "Risk Control",
-    clusterId: "risk-control",
+    clusterId: "verification",
     summary: "Recognize identity, payment, evidence, and urgency signals that deserve a pause and a second check.",
     readTime: 10,
     seoTitle: "China Supplier Scam Red Flags to Check Before Payment",
     seoDescription: "Common China supplier scam red flags involving company identity, payment accounts, evidence, urgency, and inconsistent communication.",
     publishedAt: "2026-10-05T00:00:00Z",
-    source: "built-in",
+    source: "built-in", socialHooks: ["China supplier red flags that deserve a second check", "Why urgency and beneficiary changes matter", "A red flag is not proof—but it is a reason to verify"],
     sections: [
       { heading: "The short answer", paragraphs: ["The strongest red flags are combinations: an unclear legal entity, pressure to pay, a beneficiary mismatch, generic or recycled evidence, and refusal to answer basic questions. One unusual detail may have an innocent explanation; a pattern of evasiveness should change your next step."] },
       { heading: "Identity and communication red flags", bullets: ["The seller will not provide a legal company name or registration reference.", "The person, email domain, contract entity, and payment beneficiary keep changing.", "The supplier claims factory status but cannot explain its production relationship.", "Answers are copied, contradictory, or avoid the exact product and quantity questions."] },
@@ -213,7 +214,7 @@ const verificationGuides: GuideRecord[] = [
     seoTitle: "How Factory Verification Works | FactoryRoster",
     seoDescription: "Learn how FactoryRoster reviews government registration, business contact, and factory evidence before listing a manufacturer.",
     publishedAt: "2026-10-05T00:00:00Z",
-    source: "built-in",
+    source: "built-in", socialHooks: ["What FactoryRoster verifies before listing a manufacturer", "Three checks that answer three different questions", "Verification is evidence, not a transaction guarantee"],
     sections: [
       { heading: "The short answer", paragraphs: ["FactoryRoster requires Government Registration, Business Contact, and Factory Evidence checks before a manufacturer profile is publicly listed. The checks establish a documented basis for a factory record; they are not a guarantee of product quality, pricing, delivery, or commercial performance."] },
       { heading: "The three checks", bullets: ["Government Registration: the legal entity and registration details are reviewed against available records.", "Business Contact: a working business contact channel is checked and recorded.", "Factory Evidence: evidence appropriate to the manufacturer's production relationship is reviewed."] },
@@ -229,7 +230,7 @@ const secondBatchGuides: GuideRecord[] = [
   {
     slug: "how-to-find-manufacturers-in-china", title: "How to Find Manufacturers in China", topic: "Find Suppliers", clusterId: "discovery",
     summary: "A practical workflow for defining a product, finding relevant manufacturers, comparing capability, and building a shortlist before payment.", readTime: 10,
-    seoTitle: "How to Find Manufacturers in China | FactoryRoster", seoDescription: "Learn where to find Chinese manufacturers, how to compare supplier fit, and how to verify a shortlist before payment.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    seoTitle: "How to Find Manufacturers in China | FactoryRoster", seoDescription: "Learn where to find Chinese manufacturers, how to compare supplier fit, and how to verify a shortlist before payment.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["How to go from 20 China suppliers to 2 serious candidates", "Alibaba is only one way to find Chinese manufacturers", "The 8-step China manufacturer search workflow", "Factory or trading company? Ask this before shortlisting"],
     sections: [
       { heading: "The short answer", paragraphs: ["Finding a manufacturer in China is not one search. The process is: define the product → identify sourcing channels → build a longlist → verify supplier type → compare capability → request samples and RFQs → shortlist → verify before payment."] },
       { heading: "Define the product before searching", paragraphs: ["Write down the product category, material, dimensions, target quantity, MOQ tolerance, packaging, customization, compliance market, destination country, target price range, and timeline. A vague request produces vague quotes because suppliers make different assumptions about materials, finish, packaging, and quantity. A clear brief lets you compare like with like and quickly see which suppliers are not a fit."] },
@@ -247,7 +248,7 @@ const secondBatchGuides: GuideRecord[] = [
   {
     slug: "how-to-contact-chinese-manufacturers", title: "How to Contact Chinese Manufacturers", topic: "Contact & RFQ", clusterId: "communication",
     summary: "Write a short, specific first message that gives a Chinese manufacturer enough information to answer usefully.", readTime: 8,
-    seoTitle: "How to Contact Chinese Manufacturers | First Message Guide", seoDescription: "Learn what to include in a first supplier message, how to follow up, and when to use email, Alibaba, WhatsApp, or WeChat.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    seoTitle: "How to Contact Chinese Manufacturers | First Message Guide", seoDescription: "Learn what to include in a first supplier message, how to follow up, and when to use email, Alibaba, WhatsApp, or WeChat.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["Stop sending suppliers send catalog and best price", "What to include in your first message to a Chinese manufacturer", "A copy-paste first supplier message", "8 questions to ask before discussing price"],
     sections: [
       { heading: "The short answer", paragraphs: ["A good first supplier message is short, specific, and easy to answer. It explains who you are, what product you need, the key specification, quantity, destination, customization, questions, and next step."] },
       { heading: "What suppliers need from you", bullets: ["Product, quantity, specification, material, and dimensions.", "Target market, packaging, branding, sample request, expected timeline, and shipping destination.", "Any compliance or labeling requirements that affect the quote."] },
@@ -263,7 +264,7 @@ const secondBatchGuides: GuideRecord[] = [
   {
     slug: "how-to-write-an-rfq", title: "How to Write an RFQ", topic: "Contact & RFQ", clusterId: "communication",
     summary: "A practical RFQ structure and copyable template for getting supplier quotes you can actually compare.", readTime: 10,
-    seoTitle: "How to Write an RFQ for Chinese Manufacturers", seoDescription: "Learn what a China supplier RFQ should contain, with a copyable template and response comparison checklist.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in", socialHooks: ["The 12 fields every China RFQ should include", "Why send me your best price gets bad supplier quotes", "A copy-paste RFQ template for Chinese manufacturers"],
+    seoTitle: "How to Write an RFQ for Chinese Manufacturers", seoDescription: "Learn what a China supplier RFQ should contain, with a copyable template and response comparison checklist.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["The 12 fields every China RFQ should include", "Why send me your best price gets bad supplier quotes", "A copy-paste RFQ template for Chinese manufacturers"],
     sections: [
       { heading: "The short answer", paragraphs: ["An RFQ turns a sourcing idea into a comparable request for quotation. It should give suppliers enough detail to price the same product, quantity, packaging, delivery assumptions, and timing. It is more specific than a casual inquiry, but it is not a purchase order or a promise to buy."] },
       { heading: "Inquiry, RFQ, and purchase order", bullets: ["An inquiry opens a conversation and tests general fit.", "An RFQ asks for a structured price and commercial response against known assumptions.", "A purchase order is a later buying instruction governed by the agreed commercial documents. The exact legal effect depends on the parties and contract."] },
@@ -278,7 +279,7 @@ const secondBatchGuides: GuideRecord[] = [
   {
     slug: "moq-explained", title: "MOQ Explained", topic: "MOQ, Pricing & Negotiation", clusterId: "commercial",
     summary: "Understand how Minimum Order Quantity is calculated, why packaging can change the real MOQ, and how to negotiate a smaller trial order.", readTime: 8,
-    seoTitle: "MOQ Explained: China Supplier Minimum Order Quantity", seoDescription: "Learn how Chinese suppliers calculate MOQ for products, colors, packaging, materials, and production runs, with negotiation examples.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    seoTitle: "MOQ Explained: China Supplier Minimum Order Quantity", seoDescription: "Learn how Chinese suppliers calculate MOQ for products, colors, packaging, materials, and production runs, with negotiation examples.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["Your product MOQ may be 500, but packaging MOQ may be 1,000", "6 ways to negotiate MOQ without simply demanding a lower number", "MOQ is not always measured in pieces", "Why low MOQ can come with a higher setup fee"],
     sections: [
       { heading: "The short answer", paragraphs: ["MOQ means Minimum Order Quantity, but the unit is not always a simple number of pieces. A supplier may calculate MOQ by pieces, cartons, color, size, SKU, material batch, production run, or packaging component. Always ask how the quoted MOQ is calculated."] },
       { heading: "Why manufacturers have MOQ", bullets: ["Raw-material MOQ from upstream suppliers.", "Machine setup, tooling, labor setup, printing, and production efficiency.", "Packaging minimums and supplier requirements upstream.", "The economics of changeovers, quality checks, and freight preparation."] },
@@ -292,9 +293,9 @@ const secondBatchGuides: GuideRecord[] = [
     ],
   },
   {
-    slug: "how-to-order-samples-from-china", title: "How to Order Samples from China", topic: "Samples, Quality & Inspection", clusterId: "operations",
+    slug: "how-to-order-samples-from-china", title: "How to Order Samples from China", topic: "Samples, Quality & Inspection", clusterId: "quality",
     summary: "Use samples to align specifications, test communication, and create a quality benchmark before a production order.", readTime: 9,
-    seoTitle: "How to Order Samples from China", seoDescription: "Learn sample types, fees, shipping, approval records, comparison criteria, and red flags when sourcing from China.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    seoTitle: "How to Order Samples from China", seoDescription: "Learn sample types, fees, shipping, approval records, comparison criteria, and red flags when sourcing from China.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["A good sample does not guarantee a good production run", "What to check before approving a supplier sample", "The difference between a prototype, pre-production sample, and golden sample", "Why looks good is not enough for sample approval"],
     sections: [
       { heading: "The short answer", paragraphs: ["A sample is a product and communication test, not proof that a supplier will always deliver identical quality. Use it to evaluate the product, align specifications, test packaging, compare suppliers, and create a written benchmark for later production."] },
       { heading: "Sample types", bullets: ["Off-the-shelf sample: an existing product used for initial evaluation.", "Customized sample: a product adjusted for material, color, logo, or packaging.", "Prototype: an early design or engineering version.", "Pre-production sample: a version made before a production run.", "Golden or approved sample: the agreed benchmark retained for comparison."] },
@@ -307,9 +308,9 @@ const secondBatchGuides: GuideRecord[] = [
     ],
   },
   {
-    slug: "fob-vs-exw-vs-ddp", title: "FOB vs EXW vs DDP", topic: "Shipping & Import", clusterId: "commercial",
+    slug: "fob-vs-exw-vs-ddp", title: "FOB vs EXW vs DDP", topic: "Shipping & Import", clusterId: "shipping",
     summary: "A practical comparison of EXW, FOB, and DDP responsibilities, questions, and trade-offs for China sourcing decisions.", readTime: 10,
-    seoTitle: "FOB vs EXW vs DDP for China Sourcing", seoDescription: "Compare EXW, FOB, and DDP responsibilities, freight control, import questions, and common mistakes when buying from China.", publishedAt: "2026-10-06T00:00:00Z", source: "built-in",
+    seoTitle: "FOB vs EXW vs DDP for China Sourcing", seoDescription: "Compare EXW, FOB, and DDP responsibilities, freight control, import questions, and common mistakes when buying from China.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["EXW, FOB or DDP? The simplest way to understand the difference", "Why the cheapest factory price may not mean the lowest landed cost", "8 questions to ask before accepting a DDP quote", "FOB does not mean the supplier handles all shipping"],
     sections: [
       { heading: "The short answer", paragraphs: ["EXW generally leaves the buyer with more transport responsibility from the seller's premises. FOB generally covers seller delivery through the named port and onboard stage for sea or inland waterway transport. DDP generally gives the seller extensive delivery responsibility to the named destination, including import clearance and duties under the Incoterm framework. The named place, transport mode, contract, and local rules still matter."] },
       { heading: "At-a-glance comparison", comparisonTable: { headers: ["Question", "EXW", "FOB", "DDP"], rows: [["Seller responsibility", "Goods available at premises", "Export-side delivery to named port/onboard stage", "Extensive delivery to named destination"], ["Export clearance", "Usually buyer responsibility", "Seller responsibility under the agreed term", "Seller responsibility under the agreed term"], ["Main freight", "Buyer", "Usually buyer", "Usually seller arranges"], ["Import clearance", "Buyer", "Buyer", "Seller framework responsibility; confirm who acts"], ["Duties/taxes", "Buyer", "Buyer", "Seller framework responsibility; confirm treatment"], ["Control", "High buyer control", "Shared with buyer-controlled main freight", "More seller-managed"], ["Common fit", "Experienced logistics buyer or pickup/consolidation", "Sea/inland waterway buyers wanting freight control", "Convenience where seller import capability is clear"]] } },
@@ -332,6 +333,17 @@ export function calculateGuideReadTime(guide: Pick<GuideRecord, "sections" | "co
     : guide.content ?? "";
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.ceil(wordCount / 220));
+}
+
+export function getRelatedGuides(currentGuide: GuideRecord, allGuides: GuideRecord[]) {
+  const published = allGuides.filter((guide) => guide.slug !== currentGuide.slug);
+  const sameCluster = published.filter((guide) => guide.clusterId === currentGuide.clusterId);
+  const journeyIndex = guideJourneyOrder.indexOf(currentGuide.clusterId);
+  const nextClusterId = journeyIndex >= 0 ? guideJourneyOrder[journeyIndex + 1] : undefined;
+  const nextCluster = nextClusterId ? published.filter((guide) => guide.clusterId === nextClusterId) : [];
+  const adjacent = published.filter((guide) => guide.clusterId !== currentGuide.clusterId && guide.clusterId !== nextClusterId);
+  const selected = [...sameCluster.slice(0, 2), ...nextCluster.slice(0, 2), ...sameCluster.slice(2), ...adjacent];
+  return [...new Map(selected.map((guide) => [guide.slug, guide])).values()].slice(0, 4);
 }
 
 export const publishedBuiltInGuides = builtInGuides
@@ -375,7 +387,12 @@ const clusterByTopic: Record<string, GuideClusterId> = {
   verification: "verification",
   "supplier types": "supplier-types",
   "contact intelligence": "communication",
-  "risk control": "risk-control",
+  "risk control": "verification",
+  "samples, quality & inspection": "quality",
+  "shipping & import": "shipping",
+  "contact & rfq": "communication",
+  "moq, pricing & negotiation": "commercial",
+  "find suppliers": "discovery",
 };
 
 export function clusterForTopic(topic: string): GuideClusterId {

@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { builtInGuides, calculateGuideReadTime, guideClusters, guideRoadmap, mergeGuides } from "../lib/guides";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { builtInGuides, calculateGuideReadTime, getRelatedGuides, guideClusters, guideRoadmap, mergeGuides, publishedBuiltInGuides } from "../lib/guides";
+
+const root = process.cwd();
+const detailPage = readFileSync(resolve(root, "app/guides/[guideSlug]/page.tsx"), "utf8");
+const breadcrumb = readFileSync(resolve(root, "components/seo-navigation.tsx"), "utf8");
+const sitemap = readFileSync(resolve(root, "app/sitemap.ts"), "utf8");
 
 describe("FactoryRoster Knowledge Hub", () => {
-  it("defines the seven sourcing-stage clusters and a 24-guide roadmap", () => {
-    expect(guideClusters).toHaveLength(7);
-    expect(guideRoadmap).toHaveLength(30);
-    expect(new Set(guideRoadmap.map((guide) => guide.slug)).size).toBe(30);
+  it("defines eight long-term clusters and unique guide roadmap entries", () => {
+    expect(guideClusters).toHaveLength(8);
+    expect(new Set(guideRoadmap.map((guide) => guide.slug)).size).toBe(guideRoadmap.length);
+    expect(guideRoadmap.map((guide) => guide.slug)).not.toEqual(expect.arrayContaining([
+      "how-to-write-a-china-supplier-rfq",
+      "how-to-contact-chinese-suppliers",
+      "china-supplier-moq-guide",
+      "china-supplier-sample-order-guide",
+    ]));
   });
 
   it("publishes the six verification-focused guides without empty content", () => {
@@ -30,6 +42,37 @@ describe("FactoryRoster Knowledge Hub", () => {
   it("calculates structured guide read time from content instead of trusting a hand-written label", () => {
     expect(calculateGuideReadTime({ content: "one two three four five" })).toBe(1);
     expect(calculateGuideReadTime({ content: Array.from({ length: 441 }, () => "word").join(" ") })).toBe(3);
+  });
+
+  it("uses deterministic publication dates and calculated read time for built-in guides", () => {
+    const latestAllowed = new Date("2026-10-05T23:59:59Z").getTime();
+    expect(publishedBuiltInGuides.every((guide) => new Date(guide.publishedAt).getTime() <= latestAllowed)).toBe(true);
+    expect(publishedBuiltInGuides.every((guide) => guide.readTime === calculateGuideReadTime(guide))).toBe(true);
+  });
+
+  it("keeps the second batch in the intended clusters", () => {
+    expect(builtInGuides.find((guide) => guide.slug === "how-to-order-samples-from-china")?.clusterId).toBe("quality");
+    expect(builtInGuides.find((guide) => guide.slug === "fob-vs-exw-vs-ddp")?.clusterId).toBe("shipping");
+    expect(builtInGuides.find((guide) => guide.slug === "china-supplier-scam-red-flags")?.clusterId).toBe("verification");
+    expect(builtInGuides.filter((guide) => guide.sections?.some((section) => section.heading === "The short answer")).every((guide) => (guide.socialHooks?.length ?? 0) >= 3)).toBe(true);
+  });
+
+  it("guarantees a next-stage related guide without duplicates", () => {
+    const current = builtInGuides.find((guide) => guide.slug === "how-to-verify-a-chinese-supplier");
+    expect(current).toBeTruthy();
+    const related = getRelatedGuides(current!, builtInGuides);
+    expect(related.length).toBeLessThanOrEqual(4);
+    expect(new Set(related.map((guide) => guide.slug)).size).toBe(related.length);
+    expect(related.some((guide) => guide.slug === "how-to-contact-chinese-manufacturers")).toBe(true);
+  });
+
+  it("keeps absolute Breadcrumb URLs, large social cards, and sitemap boundaries", () => {
+    expect(breadcrumb).toContain("new URL(item.href, siteUrl).toString()");
+    expect(detailPage).toContain("summary_large_image");
+    expect(detailPage).toContain("opengraph-image");
+    expect(sitemap).toContain("publishedBuiltInGuides");
+    expect(sitemap).toContain("legacyGuideFallbacks");
+    expect(sitemap).toContain("is_published");
   });
 
   it("merges Supabase rows by slug and never emits duplicate cards", () => {
