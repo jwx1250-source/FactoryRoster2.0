@@ -467,6 +467,7 @@ function Industries({ onSearch }: { onSearch: (q: string) => void }) {
           </a>
         ))}
       </div>
+      <div style={{ marginTop: 28, padding: "16px 18px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#F9FAFB" }}><p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Sourcing guides</p><div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{[["How to Find Manufacturers in China", "how-to-find-manufacturers-in-china"], ["Supplier Verification Checklist", "chinese-supplier-verification-checklist"], ["How to Write an RFQ", "how-to-write-an-rfq"]].map(([label, slug]) => <a key={slug} href={`/guides/${slug}`} style={{ color: "#1E40AF", fontSize: 12.5, textDecoration: "none" }}>{label} →</a>)}</div></div>
     </section>
   );
 }
@@ -860,6 +861,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
               <ResultCard key={r.id} result={r} onDetail={onDetail} />
             ))}
           </div>
+          <div style={{ marginTop: 22, padding: "14px 16px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#fff" }}><p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 7 }}>Need help evaluating suppliers?</p><div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>{[["Verification checklist", "chinese-supplier-verification-checklist"], ["How to write an RFQ", "how-to-write-an-rfq"], ["MOQ explained", "moq-explained"]].map(([label, slug]) => <a key={slug} href={`/guides/${slug}`} style={{ color: "#1E40AF", fontSize: 12.5, textDecoration: "none" }}>{label} →</a>)}</div></div>
         </main>
       </div>
     </div>
@@ -1115,7 +1117,7 @@ function FactoryDetailPage({ factory, fromQuery }: { factory: SearchResult; from
           </>}
           {factory.secondaryCategorySlug && <>
             <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
-            <Link href={`/industries/${factory.secondaryCategorySlug}`} style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>{factory.secondaryCategories?.[0]}</Link>
+            <Link href={`/search?secondary_category=${encodeURIComponent(factory.secondaryCategorySlug)}`} style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>{factory.secondaryCategories?.[0]}</Link>
           </>}
           <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
           <span style={{ fontSize: 12.5, color: "#6B7280" }}>{factory.name}</span>
@@ -1532,6 +1534,8 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
           </div>
         </div>
       </section>
+
+      <section style={{ maxWidth: 860, margin: "0 auto", padding: "0 32px 44px" }}><div style={{ padding: "16px 18px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#fff" }}><p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Verification reading</p><div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{[["Supplier Verification Checklist", "chinese-supplier-verification-checklist"], ["How to Verify a Chinese Supplier", "how-to-verify-a-chinese-supplier"], ["China Supplier Scam Red Flags", "china-supplier-scam-red-flags"]].map(([label, slug]) => <a key={slug} href={`/guides/${slug}`} style={{ color: "#1E40AF", fontSize: 12.5, textDecoration: "none" }}>{label} →</a>)}</div></div></section>
 
       {/* Bottom CTA */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 32px" }}>
@@ -1956,7 +1960,10 @@ function CheckoutButton({ plan, returnTo }: { plan: "starter" | "buyer" | "pro";
       const response = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan, return_to: returnTo }) });
       const body = await response.json();
       if (response.status === 401) { router.push(`/sign-in?next=${encodeURIComponent(`/pricing?return_to=${returnTo}`)}`); return; }
-      if (!response.ok || !body.url) throw new Error(body.error || "Unable to start checkout");
+      if (!response.ok || !body.url) {
+        const detail = typeof body.detail === "string" ? `: ${body.detail}` : "";
+        throw new Error(`${body.error || "Unable to start checkout"}${detail}`);
+      }
       window.location.assign(body.url);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Unable to start checkout"); setBusy(false); }
   };
@@ -2208,6 +2215,8 @@ function PricingPage({ onSearch, onIndustries, onNav }: { onSearch: (q: string) 
           {PRICING_FAQ.map((item) => <FAQItem key={item.q} {...item} />)}
         </div>
       </section>
+
+      <section style={{ maxWidth: 860, margin: "0 auto", padding: "0 32px 44px" }}><div style={{ padding: "16px 18px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#fff" }}><p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Continue learning</p><div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{[["Chinese Supplier Verification Checklist", "chinese-supplier-verification-checklist"], ["China Supplier Scam Red Flags", "china-supplier-scam-red-flags"], ["Pre-Shipment Inspection Checklist", "pre-shipment-inspection-checklist"]].map(([label, slug]) => <a key={slug} href={`/guides/${slug}`} style={{ color: "#1E40AF", fontSize: 12.5, textDecoration: "none" }}>{label} →</a>)}</div></div></section>
 
       {/* Bottom CTA */}
       <section style={{ background: "#fff", borderTop: "1px solid #E9ECF1" }}>

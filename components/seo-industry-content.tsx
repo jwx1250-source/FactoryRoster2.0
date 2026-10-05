@@ -1,6 +1,8 @@
 import { PRIMARY_INDUSTRY_BY_SLUG } from "@/lib/categories";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { Breadcrumbs } from "@/components/seo-navigation";
+import { publishedBuiltInGuides } from "@/lib/guides";
+import { industryGuideLinks } from "@/lib/guide-links";
 
 export default async function SeoIndustryContent({ slug }: { slug: string }) {
   const industry = PRIMARY_INDUSTRY_BY_SLUG.get(slug);
@@ -11,6 +13,8 @@ export default async function SeoIndustryContent({ slug }: { slug: string }) {
     ? await supabase.from("factories").select("slug,company_name,city,province,overview,main_products,capabilities,supplier_type,certifications,moq", { count: "exact" }).eq("industry_id", industryRow.id).eq("is_published", true).eq("is_indexable", true).order("last_verified_at", { ascending: false }).limit(100)
     : { data: [], count: 0 };
   const rows = suppliers ?? [];
+  const guideMap = new Map(publishedBuiltInGuides.map((guide) => [guide.slug, guide]));
+  const resources = (industryGuideLinks[slug] ?? ["how-to-find-manufacturers-in-china", "chinese-supplier-verification-checklist", "how-to-write-an-rfq"]).map((item) => guideMap.get(item)).filter(Boolean);
   const productTerms = [...new Set(rows.flatMap((row) => String(row.main_products ?? "").split(",").map((item) => item.trim()).filter(Boolean)))].slice(0, 8);
   return (
     <div style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
@@ -21,6 +25,7 @@ export default async function SeoIndustryContent({ slug }: { slug: string }) {
         <p style={{ maxWidth: 760, color: "#4B5563", lineHeight: 1.65, margin: "0 0 10px" }}>{industry.description} FactoryRoster lists suppliers in this category only after verification.</p>
         <p style={{ color: "#6B7280", margin: "0 0 22px" }}>{count ?? rows.length} published suppliers in this industry.</p>
         {productTerms.length > 0 && <p style={{ color: "#6B7280", fontSize: 13, margin: "0 0 20px" }}><strong>Products represented:</strong> {productTerms.join(", ")}</p>}
+        <section aria-label="Buyer resources" style={{ margin: "0 0 28px", padding: "16px 18px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#F9FAFB" }}><h2 style={{ fontSize: 18, margin: "0 0 8px", color: "#0D1117" }}>Buyer resources for {industry.name}</h2><p style={{ color: "#6B7280", margin: "0 0 12px", fontSize: 13 }}>Practical guides for comparing and contacting suppliers in this category.</p><div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{resources.map((guide) => guide && <a key={guide.slug} href={`/guides/${guide.slug}`} style={{ color: "#1E40AF", textDecoration: "none", fontSize: 13, padding: "7px 10px", borderRadius: 6, background: "#fff", border: "1px solid #DBEAFE" }}>{guide.title} →</a>)}</div></section>
         <h2 style={{ fontSize: 20, margin: "0 0 12px", color: "#0D1117" }}>Manufacturers in {industry.name}</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 10 }}>
           {rows.map((supplier) => <a key={supplier.slug} href={`/factories/${supplier.slug}`} style={{ display: "block", padding: "12px 14px", border: "1px solid #E9ECF1", borderRadius: 8, color: "#1E40AF", textDecoration: "none" }}><strong>{supplier.company_name}</strong><span style={{ display: "block", marginTop: 4, color: "#6B7280", fontSize: 12 }}>{[supplier.city, supplier.province].filter(Boolean).join(", ") || "China"}</span></a>)}

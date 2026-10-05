@@ -5,6 +5,7 @@ import FigmaApp from "@/components/figma-app";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { siteUrl } from "@/lib/site";
 import { Breadcrumbs } from "@/components/seo-navigation";
+import { SupplierGuideLinks } from "@/components/supplier-guide-links";
 
 const getPublishedFactory = cache(async (slug: string) => {
   const { data } = await createSupabaseAdminClient().from("factories").select("id,slug,company_name,chinese_name,record_id,province,city,district,address_public,established_year,employee_range,factory_size,annual_revenue_range,main_products,capabilities,export_markets,certifications,trade_terms,moq,website_url,factory_type,supplier_type,supply_evidence_type,moq_level,supports_small_orders,supports_sample_orders,supports_private_label,supply_model,overview,last_verified_at,has_verified_contact,is_indexable,seo_title,seo_description,industries!factories_industry_id_fkey(name,slug,code),secondary_category:industries!factories_secondary_category_id_fkey(name,slug)").eq("slug", slug).eq("is_published", true).maybeSingle();
@@ -23,5 +24,5 @@ export default async function FactoryPage({ params }: { params: Promise<{ factor
   const factory = await getPublishedFactory(factorySlug);
   if (!factory) notFound();
   const industry = Array.isArray(factory.industries) ? factory.industries[0] : factory.industries;
-  return <><Breadcrumbs visual={false} items={[{ name: "Home", href: "/" }, { name: "Industries", href: "/industries" }, ...(industry?.slug ? [{ name: industry.name, href: `/industries/${industry.slug}` }] : []), { name: factory.company_name, href: `/factories/${factory.slug}` }]} /><FigmaApp initialPath={`/factories/${factorySlug}`} initialSupplier={factory} /></>;
+  return <><Breadcrumbs visual={false} items={[{ name: "Home", href: "/" }, { name: "Industries", href: "/industries" }, ...(industry?.slug ? [{ name: industry.name, href: `/industries/${industry.slug}` }] : []), { name: factory.company_name, href: `/factories/${factory.slug}` }]} /><FigmaApp initialPath={`/factories/${factorySlug}`} initialSupplier={factory} /><SupplierGuideLinks supplierType={factory.supplier_type} /></>;
 }
