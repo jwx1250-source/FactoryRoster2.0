@@ -1,21 +1,44 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/seo-navigation";
+import { GuideContent, GuideCtas } from "@/components/guide-content";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getGuideBySlug, mergeGuides, type GuideDatabaseRow, type GuideRecord } from "@/lib/guides";
 import { siteUrl } from "@/lib/site";
 
-async function getGuide(slug: string) {
-  const { data } = await createSupabaseAdminClient().from("guides").select("slug,title,topic,summary,content,read_time,seo_title,seo_description,published_at").eq("slug", slug).eq("is_published", true).maybeSingle();
-  return data;
+async function getGuide(slug: string): Promise<GuideRecord | undefined> {
+  try {
+    const { data } = await createSupabaseAdminClient().from("guides").select("slug,title,topic,summary,content,read_time,seo_title,seo_description,published_at,updated_at").eq("slug", slug).eq("is_published", true).maybeSingle();
+    return getGuideBySlug(slug, data ? [data as GuideDatabaseRow] : []);
+  } catch {
+    return getGuideBySlug(slug);
+  }
+}
+
+async function getAllGuides() {
+  try {
+    const { data } = await createSupabaseAdminClient().from("guides").select("slug,title,topic,summary,content,read_time,seo_title,seo_description,published_at,updated_at").eq("is_published", true).order("published_at", { ascending: false });
+    return mergeGuides((data ?? []) as GuideDatabaseRow[]);
+  } catch {
+    return mergeGuides();
+  }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ guideSlug: string }> }): Promise<Metadata> {
-  const { guideSlug } = await params; const guide = await getGuide(guideSlug);
+  const { guideSlug } = await params;
+  const guide = await getGuide(guideSlug);
   if (!guide) return { title: "Guide not found", robots: { index: false, follow: false } };
-  return { title: guide.seo_title || guide.title, description: guide.seo_description || guide.summary, alternates: { canonical: `${siteUrl}/guides/${guide.slug}` } };
+  return { title: guide.seoTitle, description: guide.seoDescription, alternates: { canonical: `${siteUrl}/guides/${guide.slug}` }, openGraph: { title: guide.seoTitle, description: guide.seoDescription, url: `${siteUrl}/guides/${guide.slug}`, type: "article", publishedTime: guide.publishedAt, modifiedTime: guide.updatedAt || guide.publishedAt }, twitter: { card: "summary", title: guide.seoTitle, description: guide.seoDescription } };
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ guideSlug: string }> }) {
-  const { guideSlug } = await params; const guide = await getGuide(guideSlug); if (!guide) notFound();
-  return <main style={{ minHeight: "100vh", background: "#fff" }}><article style={{ maxWidth: 760, margin: "0 auto", padding: "64px 20px 96px" }}><Link href="/guides" style={{ color: "#1e40af", textDecoration: "none", fontSize: 13 }}>← All guides</Link><p className="admin-kicker" style={{ marginTop: 42 }}>{guide.topic}</p><h1 style={{ fontSize: "clamp(34px,6vw,58px)", lineHeight: 1.08, margin: "0 0 20px" }}>{guide.title}</h1><p style={{ fontSize: 20, color: "#6b7280", lineHeight: 1.6 }}>{guide.summary}</p><p style={{ fontSize: 12, color: "#6b7280", margin: "24px 0 42px" }}>{guide.read_time} min read</p><div style={{ whiteSpace: "pre-wrap", fontSize: 17, lineHeight: 1.85, color: "#273142" }}>{guide.content}</div></article></main>;
+  const { guideSlug } = await params;
+  const guide = await getGuide(guideSlug);
+  if (!guide) notFound();
+  const allGuides = await getAllGuides();
+  const related = allGuides.filter((item) => item.slug !== guide.slug && (item.clusterId === guide.clusterId || item.topic === guide.topic));
+  const breadcrumbItems = [{ name: "Home", href: "/" }, { name: "Guides", href: "/guides" }, { name: guide.title, href: `/guides/${guide.slug}` }];
+  const articleJsonLd = { "@context": "https://schema.org", "@type": "Article", "@id": `${siteUrl}/guides/${guide.slug}#article`, headline: guide.title, description: guide.summary, datePublished: guide.publishedAt, dateModified: guide.updatedAt || guide.publishedAt, mainEntityOfPage: `${siteUrl}/guides/${guide.slug}`, author: { "@type": "Organization", name: "FactoryRoster", url: siteUrl }, publisher: { "@type": "Organization", name: "FactoryRoster", url: siteUrl } };
+  return <main className="guide-detail"><Breadcrumbs items={breadcrumbItems} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} /><article className="guide-article"><Link className="guide-back" href="/guides">← All sourcing guides</Link><header className="guide-article-header"><p className="admin-kicker">{guide.topic}</p><h1>{guide.title}</h1><p className="guide-summary">{guide.summary}</p><div className="guide-meta"><span>{guide.readTime} min read</span><span>Updated {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(guide.updatedAt || guide.publishedAt))}</span><span>FactoryRoster Knowledge Hub</span></div></header><GuideContent guide={guide} /><GuideCtas related={related} /></article></main>;
 }

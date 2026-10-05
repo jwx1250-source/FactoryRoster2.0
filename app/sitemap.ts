@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { industries, siteUrl } from "@/lib/site";
+import { legacyGuideFallbacks, publishedBuiltInGuides } from "@/lib/guides";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // Supplier records are maintained in Supabase after deploys. Do not freeze this
@@ -8,7 +9,10 @@ export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = ["", "/industries", "/verification", "/pricing", "/guides", "/request-verification", "/contact", "/about", "/privacy-policy", "/terms"];
-  let dynamicRoutes = industries.map((item) => `/industries/${item.slug}`);
+  let dynamicRoutes = [
+    ...industries.map((item) => `/industries/${item.slug}`),
+    ...[...publishedBuiltInGuides, ...legacyGuideFallbacks].map((item) => `/guides/${item.slug}`),
+  ];
 
   try {
     const supabase = createSupabaseAdminClient();
@@ -17,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       supabase.from("factories").select("slug").eq("is_published", true).eq("is_indexable", true),
     ]);
     dynamicRoutes = [
+      ...dynamicRoutes,
       ...(guides ?? []).map((item) => `/guides/${item.slug}`),
       ...(factories ?? []).map((item) => `/factories/${item.slug}`),
     ];

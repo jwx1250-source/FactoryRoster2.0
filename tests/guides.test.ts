@@ -1,0 +1,33 @@
+import { describe, expect, it } from "vitest";
+import { builtInGuides, guideClusters, guideRoadmap, mergeGuides } from "../lib/guides";
+
+describe("FactoryRoster Knowledge Hub", () => {
+  it("defines the seven sourcing-stage clusters and a 24-guide roadmap", () => {
+    expect(guideClusters).toHaveLength(7);
+    expect(guideRoadmap).toHaveLength(24);
+    expect(new Set(guideRoadmap.map((guide) => guide.slug)).size).toBe(24);
+  });
+
+  it("publishes the six verification-focused guides without empty content", () => {
+    expect(builtInGuides).toHaveLength(6);
+    expect(builtInGuides.every((guide) => guide.sections && guide.sections.length >= 5)).toBe(true);
+    expect(builtInGuides.map((guide) => guide.slug)).toEqual(expect.arrayContaining([
+      "how-to-verify-a-chinese-supplier",
+      "chinese-supplier-verification-checklist",
+      "manufacturer-vs-trading-company-china",
+      "how-to-verify-a-chinese-business-license",
+      "china-supplier-scam-red-flags",
+      "how-factory-verification-works",
+    ]));
+  });
+
+  it("merges Supabase rows by slug and never emits duplicate cards", () => {
+    const merged = mergeGuides([
+      { slug: "how-to-verify-a-chinese-supplier", title: "DB override", topic: "Verification", summary: "Override", content: "## Updated\n\nUpdated content", read_time: 4, seo_title: null, seo_description: null, published_at: "2026-10-06T00:00:00Z" },
+      { slug: "custom-guide", title: "Custom guide", topic: "Factory Search", summary: "Custom", content: "Useful content", read_time: 5, seo_title: null, seo_description: null, published_at: "2026-10-06T00:00:00Z" },
+    ]);
+    expect(new Set(merged.map((guide) => guide.slug)).size).toBe(merged.length);
+    expect(merged.find((guide) => guide.slug === "how-to-verify-a-chinese-supplier")?.title).toBe("DB override");
+    expect(merged.some((guide) => guide.slug === "custom-guide")).toBe(true);
+  });
+});
