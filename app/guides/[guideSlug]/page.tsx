@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/seo-navigation";
 import { GuideContent, GuideCtas } from "@/components/guide-content";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getGuideBySlug, mergeGuides, type GuideDatabaseRow, type GuideRecord } from "@/lib/guides";
+import { getGuideBySlug, guideClusters, mergeGuides, type GuideDatabaseRow, type GuideRecord } from "@/lib/guides";
 import { siteUrl } from "@/lib/site";
 
 async function getGuide(slug: string): Promise<GuideRecord | undefined> {
@@ -37,7 +37,9 @@ export default async function GuidePage({ params }: { params: Promise<{ guideSlu
   const guide = await getGuide(guideSlug);
   if (!guide) notFound();
   const allGuides = await getAllGuides();
-  const related = allGuides.filter((item) => item.slug !== guide.slug && (item.clusterId === guide.clusterId || item.topic === guide.topic));
+  const clusterIndex = guideClusters.findIndex((cluster) => cluster.id === guide.clusterId);
+  const nextClusterId = guideClusters[clusterIndex + 1]?.id;
+  const related = allGuides.filter((item) => item.slug !== guide.slug && (item.clusterId === guide.clusterId || item.clusterId === nextClusterId)).sort((a, b) => (a.clusterId === guide.clusterId ? 0 : 1) - (b.clusterId === guide.clusterId ? 0 : 1));
   const breadcrumbItems = [{ name: "Home", href: "/" }, { name: "Guides", href: "/guides" }, { name: guide.title, href: `/guides/${guide.slug}` }];
   const articleJsonLd = { "@context": "https://schema.org", "@type": "Article", "@id": `${siteUrl}/guides/${guide.slug}#article`, headline: guide.title, description: guide.summary, datePublished: guide.publishedAt, dateModified: guide.updatedAt || guide.publishedAt, mainEntityOfPage: `${siteUrl}/guides/${guide.slug}`, author: { "@type": "Organization", name: "FactoryRoster", url: siteUrl }, publisher: { "@type": "Organization", name: "FactoryRoster", url: siteUrl } };
   return <main className="guide-detail"><Breadcrumbs items={breadcrumbItems} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} /><article className="guide-article"><Link className="guide-back" href="/guides">← All sourcing guides</Link><header className="guide-article-header"><p className="admin-kicker">{guide.topic}</p><h1>{guide.title}</h1><p className="guide-summary">{guide.summary}</p><div className="guide-meta"><span>{guide.readTime} min read</span><span>Updated {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(guide.updatedAt || guide.publishedAt))}</span><span>FactoryRoster Knowledge Hub</span></div></header><GuideContent guide={guide} /><GuideCtas related={related} /></article></main>;

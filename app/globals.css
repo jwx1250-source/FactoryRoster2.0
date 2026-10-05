@@ -175,6 +175,13 @@ body [style*="font-size:36px"]:not(h1):not(h1 *) { font-size: 39px !important; }
 .guide-prose ul, .guide-prose ol { padding-left: 27px; margin: 0 0 19px; }
 .guide-prose li { margin: 8px 0; padding-left: 4px; }
 .guide-callout { padding: 16px 18px; border-left: 3px solid #1e40af; background: #f1f5ff; color: #30456e; font-size: 16px; line-height: 1.6; }
+.checklist-tools { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 12px; }
+.checklist-tools button { border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #1e40af; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+.checklist-tools button:hover { background: #eef4ff; border-color: #8da8e7; }
+.guide-checklist { list-style: none; padding-left: 0 !important; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+.guide-checklist li { display: flex; gap: 12px; align-items: flex-start; margin: 0; padding: 12px 15px; border-bottom: 1px solid #edf0f4; background: #fff; }
+.guide-checklist li:last-child { border-bottom: 0; }
+.guide-checklist li span { color: #1e40af; font-size: 20px; line-height: 1.2; }
 .guide-cta-grid { padding: 28px 0 10px; border-top: 1px solid #e7ebf0; }
 .guide-related { padding-top: 48px; }
 .guide-related-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -192,6 +199,14 @@ body [style*="font-size:36px"]:not(h1):not(h1 *) { font-size: 39px !important; }
   .guide-section h2, .guide-prose > section h2 { font-size: 25px; }
   .guide-meta { gap: 8px; }
   .guide-meta span + span::before { margin-right: 8px; }
+}
+
+@media print {
+  body { background: #fff; }
+  .checklist-tools, .guide-cta-grid, .guide-related, .guide-back, nav[aria-label="Breadcrumb"] { display: none !important; }
+  .guide-detail, .guide-article { background: #fff; }
+  .guide-article { max-width: none; padding: 0; }
+  .guide-article-header { padding-top: 0; }
 }
 
 /* ── Responsive utilities ───────────────────────────────────────────────────── */

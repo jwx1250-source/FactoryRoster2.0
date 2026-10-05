@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { GuideRecord, GuideSection } from "@/lib/guides";
+import { ChecklistTools } from "@/components/checklist-tools";
 
 function PlainTextContent({ content }: { content: string }) {
   const blocks = content.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean);
@@ -18,6 +19,7 @@ function Section({ section }: { section: GuideSection }) {
     {section.paragraphs?.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
     {section.bullets && <ul>{section.bullets.map((item) => <li key={item}>{item}</li>)}</ul>}
     {section.numbered && <ol>{section.numbered.map((item) => <li key={item}>{item}</li>)}</ol>}
+    {section.checklist && <><ChecklistTools items={section.checklist} /><ul className="guide-checklist">{section.checklist.map((item) => <li key={item}><span aria-hidden="true">☐</span>{item}</li>)}</ul></>}
     {section.callout && <aside className="guide-callout">{section.callout}</aside>}
   </section>;
 }

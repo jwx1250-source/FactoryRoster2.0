@@ -76,3 +76,37 @@ FactoryRoster does not guarantee quality, delivery, pricing, or transaction outc
   seo_description = 'Use verified contact intelligence for focused factory outreach while keeping buyer due diligence in place.',
   updated_at = now()
 where slug = 'use-verified-factory-contacts';
+
+update public.guides
+set
+  content = $$## The short answer
+
+FactoryRoster works best when you use it as a shortlist-building workflow: start with a product or category, filter for supplier type and fit, read the verification labels correctly, compare capabilities, and then contact three to five strong candidates with the same RFQ.
+
+## 1. Start with a precise product or category
+
+Define the product, materials, dimensions, target quantity, destination market, customization, and timing before you search. A clear brief makes supplier cards comparable and prevents a large directory from becoming an unstructured list of names.
+
+## 2. Search by supplier type
+
+A manufacturer may be the best fit for repeat production, tooling, or private label. A distributor, exporter, wholesaler, or trading company may be more suitable for low MOQ, mixed products, existing inventory, or faster export coordination. Do not treat a trading supplier as a manufacturer; read supplier type and supply model together with the evidence labels.
+
+## 3. Read verification status correctly
+
+A public profile must pass Government Registration, Business Contact, and Supply Evidence checks. Those checks answer different questions: who the entity is, whether a business contact works, and whether the claimed supply role has supporting evidence. Verification supports research at a point in time; it does not guarantee quality, pricing, delivery, or transaction outcomes.
+
+## 4. Check capability and compare export fit
+
+Review product categories, capabilities, MOQ, sample support, private-label support, location, and export information. Ask for current specifications, materials, packaging, production process, lead time, certifications, destination-market experience, and shipping documentation for your exact product.
+
+## 5. Build a shortlist, then contact and verify before payment
+
+Record the legal entity, supplier type, key product fit, MOQ, sample terms, open questions, and next action for three to five candidates. Prepare a concise RFQ, confirm the contact person and contracting entity, compare the quote and beneficiary, and use appropriate samples, inspections, staged payments, contracts, and professional trade or legal advice for higher-value orders.
+
+## FactoryRoster verification limitations
+
+FactoryRoster is an informational directory and does not participate in transactions between buyers and suppliers. Verification confirms specific facts at a point in time; it does not guarantee product quality, delivery, pricing, exclusivity, compliance, or a successful transaction.$$,
+  summary = 'Build a focused China manufacturer shortlist using verified supplier intelligence and buyer-side due diligence.',
+  read_time = 8,
+  updated_at = now()
+where slug = 'find-verified-china-manufacturers';
