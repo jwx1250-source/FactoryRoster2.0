@@ -30,7 +30,7 @@ describe("guide SEO and indexing contract", () => {
     expect(page).toContain("summary_large_image");
     expect(page).toContain("opengraph-image");
     expect(page).toContain("application/ld+json");
-    expect(breadcrumbs).toContain("new URL(item.href, siteUrl).toString()");
+    expect(breadcrumbs).toContain('item: { "@id": new URL(item.href, siteUrl).toString() }');
     expect(sitemap).toContain("publishedBuiltInGuides");
   });
 

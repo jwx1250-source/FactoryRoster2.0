@@ -6,7 +6,12 @@ export function Breadcrumbs({ items, visual = true }: { items: Array<{ name: str
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({ "@type": "ListItem", position: index + 1, name: item.name, item: new URL(item.href, siteUrl).toString() })),
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      ...(index < items.length - 1 ? { item: { "@id": new URL(item.href, siteUrl).toString() } } : {}),
+    })),
   };
   return (
     <>
