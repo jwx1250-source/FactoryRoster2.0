@@ -21,7 +21,7 @@ describe("FactoryRoster Knowledge Hub", () => {
   });
 
   it("publishes the six verification-focused guides without empty content", () => {
-    expect(builtInGuides).toHaveLength(12);
+    expect(builtInGuides).toHaveLength(18);
     expect(builtInGuides.every((guide) => guide.sections && guide.sections.length >= 5)).toBe(true);
     expect(builtInGuides.map((guide) => guide.slug)).toEqual(expect.arrayContaining([
       "how-to-verify-a-chinese-supplier",
@@ -36,6 +36,12 @@ describe("FactoryRoster Knowledge Hub", () => {
       "moq-explained",
       "how-to-order-samples-from-china",
       "fob-vs-exw-vs-ddp",
+      "how-to-negotiate-moq-with-chinese-suppliers",
+      "golden-sample-explained",
+      "china-quality-control-guide",
+      "pre-shipment-inspection-checklist",
+      "shipping-from-china",
+      "landed-cost-explained",
     ]));
   });
 
@@ -55,6 +61,43 @@ describe("FactoryRoster Knowledge Hub", () => {
     expect(builtInGuides.find((guide) => guide.slug === "fob-vs-exw-vs-ddp")?.clusterId).toBe("shipping");
     expect(builtInGuides.find((guide) => guide.slug === "china-supplier-scam-red-flags")?.clusterId).toBe("verification");
     expect(builtInGuides.filter((guide) => guide.sections?.some((section) => section.heading === "The short answer")).every((guide) => (guide.socialHooks?.length ?? 0) >= 3)).toBe(true);
+  });
+
+  it("publishes the third batch in the intended clusters with unique slugs", () => {
+    const thirdBatch = [
+      ["how-to-negotiate-moq-with-chinese-suppliers", "commercial"],
+      ["golden-sample-explained", "quality"],
+      ["china-quality-control-guide", "quality"],
+      ["pre-shipment-inspection-checklist", "quality"],
+      ["shipping-from-china", "shipping"],
+      ["landed-cost-explained", "shipping"],
+    ] as const;
+    for (const [slug, cluster] of thirdBatch) {
+      const guide = builtInGuides.find((item) => item.slug === slug);
+      expect(guide?.clusterId).toBe(cluster);
+      expect(guide?.sections?.length).toBeGreaterThanOrEqual(8);
+      expect(guide?.socialHooks?.length).toBeGreaterThanOrEqual(3);
+      expect(guideRoadmap.find((item) => item.slug === slug)?.status).toBe("published");
+    }
+    expect(new Set(thirdBatch.map(([slug]) => slug)).size).toBe(thirdBatch.length);
+    expect(guideRoadmap.some((item) => item.slug === "china-supplier-quality-control")).toBe(false);
+  });
+
+  it("keeps the pricing-to-shipping journey linked only to published guides", () => {
+    const bySlug = new Map(publishedBuiltInGuides.map((guide) => [guide.slug, guide]));
+    const expected: Record<string, string[]> = {
+      "how-to-negotiate-moq-with-chinese-suppliers": ["moq-explained", "how-to-write-an-rfq", "how-to-order-samples-from-china"],
+      "how-to-order-samples-from-china": ["golden-sample-explained", "china-quality-control-guide"],
+      "china-quality-control-guide": ["golden-sample-explained", "pre-shipment-inspection-checklist", "shipping-from-china"],
+      "pre-shipment-inspection-checklist": ["china-quality-control-guide", "shipping-from-china"],
+      "shipping-from-china": ["fob-vs-exw-vs-ddp", "landed-cost-explained"],
+      "landed-cost-explained": ["shipping-from-china", "fob-vs-exw-vs-ddp", "moq-explained"],
+    };
+    for (const [source, targets] of Object.entries(expected)) {
+      const related = getRelatedGuides(bySlug.get(source)!, publishedBuiltInGuides).map((guide) => guide.slug);
+      expect(related).toEqual(expect.arrayContaining(targets));
+      expect(related).not.toContain("china-supplier-quality-control");
+    }
   });
 
   it("guarantees a next-stage related guide without duplicates", () => {
