@@ -13,6 +13,18 @@ const unlockRoute = readFileSync(resolve(root, "app/api/factories/[slug]/unlock/
 const migration = readFileSync(resolve(root, "supabase/migrations/20261004133823_production_contact_credit_payments.sql"), "utf8");
 const refundMigration = readFileSync(resolve(root, "supabase/migrations/20261004180000_refund_dispute_handling.sql"), "utf8");
 const refundHardeningMigration = readFileSync(resolve(root, "supabase/migrations/20261004200000_harden_refund_idempotency.sql"), "utf8");
+const shortfallMigration = readFileSync(resolve(root, "supabase/migrations/20261005090000_refund_shortfall_recovery.sql"), "utf8");
+
+function recoverRefundShortfall(shortfall: number, purchase: number, activeDispute = false) {
+  const recovered = Math.min(shortfall, purchase);
+  const remainingShortfall = shortfall - recovered;
+  return {
+    recovered,
+    spendable: purchase - recovered,
+    remainingShortfall,
+    consumptionBlocked: activeDispute || remainingShortfall > 0,
+  };
+}
 
 describe("Stripe credit catalog", () => {
   it.each([
@@ -31,6 +43,8 @@ describe("Stripe credit catalog", () => {
     expect(checkoutRoute).toContain("managed_payments: { enabled: false }");
     expect(webhookRoute).toContain("session.amount_total");
     expect(webhookRoute).toContain("listLineItems");
+    expect(checkoutRoute).toContain("stripe.customers.retrieve");
+    expect(checkoutRoute).toContain('stripeCode === "resource_missing"');
   });
 });
 
@@ -93,5 +107,34 @@ describe("refunds, disputes, and account restrictions", () => {
     expect(refundMigration).toContain("if p_status = 'won' and not open_disputes");
     expect(refundMigration).toContain("Stripe dispute lost; account review required");
     expect(refundMigration).toContain("if not existing_unlock then");
+  });
+
+  it("recovers refund shortfalls atomically from later purchases", () => {
+    expect(shortfallMigration).toContain("refund_credit_shortfall");
+    expect(shortfallMigration).toContain("refund_shortfall_recovery");
+    expect(shortfallMigration).toContain("recovery_credits := least(p_credits, balance_row.refund_credit_shortfall)");
+    expect(shortfallMigration).toContain("consumption_blocked = (refund_credit_shortfall - recovery_credits > 0) or active_dispute");
+    expect(shortfallMigration).toContain("credits_shortfall = credits_shortfall + shortfall_delta");
+    expect(shortfallMigration).toContain("if p_status = 'won' and not open_disputes and coalesce(shortfall, 0) = 0");
+  });
+
+  it("applies the shortfall recovery math without reducing the purchase ledger", () => {
+    expect(recoverRefundShortfall(1, 3)).toEqual({
+      recovered: 1,
+      spendable: 2,
+      remainingShortfall: 0,
+      consumptionBlocked: false,
+    });
+    expect(recoverRefundShortfall(5, 3)).toEqual({
+      recovered: 3,
+      spendable: 0,
+      remainingShortfall: 2,
+      consumptionBlocked: true,
+    });
+
+    const first = recoverRefundShortfall(5, 3);
+    const second = recoverRefundShortfall(first.remainingShortfall, 2);
+    expect(second).toMatchObject({ recovered: 2, spendable: 0, remainingShortfall: 0, consumptionBlocked: false });
+    expect(recoverRefundShortfall(1, 3, true).consumptionBlocked).toBe(true);
   });
 });

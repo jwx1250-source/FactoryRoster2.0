@@ -11,7 +11,8 @@ const serverSchema = publicSchema.extend({
 });
 
 const stripeSchema = z.object({
-  STRIPE_SECRET_KEY: z.string().startsWith("sk_"),
+  // Stripe supports both standard secret keys (sk_) and restricted keys (rk_).
+  STRIPE_SECRET_KEY: z.string().regex(/^(sk|rk)_/),
   STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_"),
   STRIPE_PRICE_STARTER_ID: z.string().startsWith("price_"),
   STRIPE_PRICE_BUYER_ID: z.string().startsWith("price_"),
@@ -19,9 +20,12 @@ const stripeSchema = z.object({
 });
 
 export class MissingConfigurationError extends Error {
-  constructor(service: string) {
+  readonly missingKeys?: string[];
+
+  constructor(service: string, missingKeys?: string[]) {
     super(`${service} is not configured. Add the required environment variables.`);
     this.name = "MissingConfigurationError";
+    this.missingKeys = missingKeys;
   }
 }
 
@@ -38,8 +42,25 @@ export function getServerEnv() {
 }
 
 export function getStripeEnv() {
-  const result = stripeSchema.safeParse(process.env);
-  if (!result.success) throw new MissingConfigurationError("Stripe");
+  const stripeEnv = Object.fromEntries(
+    [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "STRIPE_PRICE_STARTER_ID",
+      "STRIPE_PRICE_BUYER_ID",
+      "STRIPE_PRICE_PRO_ID",
+    ].map((key) => [key, process.env[key]?.trim()]),
+  );
+  const result = stripeSchema.safeParse(stripeEnv);
+  if (!result.success) {
+    // Keep diagnostics server-side and value-free so misconfigured deployments
+    // can be fixed without ever exposing Stripe secrets to the client.
+    console.error("[stripe-config] invalid environment variables", result.error.issues.map((issue) => issue.path.join(".")));
+    throw new MissingConfigurationError(
+      "Stripe",
+      result.error.issues.map((issue) => issue.path.join(".")),
+    );
+  }
   return result.data;
 }
 

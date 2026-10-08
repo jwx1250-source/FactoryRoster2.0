@@ -13,6 +13,11 @@ const links = [
   ["Contact Messages", "/admin/contact-messages"],
   ["Users & Credits", "/admin/users"],
   ["Settings", "/admin/settings"],
+  ["Growth events", "/admin/growth-events"],
+  ["Growth overview", "/admin/growth"],
+  ["Growth tasks", "/admin/growth-tasks"],
+  ["SEO snapshots", "/admin/seo-page-snapshots"],
+  ["Prospects", "/admin/prospect-accounts"],
 ] as const;
 
 export function AdminNav() {

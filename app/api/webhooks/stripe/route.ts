@@ -4,6 +4,7 @@ import { getStripeEnv } from "@/lib/env";
 import { isPlanSlug, PLAN_CATALOG } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { safeRecordServerGrowthEvent } from "@/lib/growth";
 
 export const runtime = "nodejs";
 
@@ -49,6 +50,7 @@ async function grantCredits(event: Stripe.Event, session: Stripe.Checkout.Sessio
     p_description: `${plan.name} credit purchase`,
   });
   if (error) throw error;
+  await safeRecordServerGrowthEvent("checkout_completed", { userId, entityType: "plan", entityId: planSlug, properties: { checkout_session_id: session.id, credits: plan.credits }, idempotencyKey: `checkout_completed:${session.id}` });
 }
 
 async function recordRefund(event: Stripe.Event, object: Stripe.Charge | Stripe.Refund) {

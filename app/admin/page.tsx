@@ -6,11 +6,13 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 export default async function AdminPage() {
   await requireAdmin();
   const supabase = createSupabaseAdminClient();
-  const [factories, verifications, requests, messages] = await Promise.all([
+  const [factories, verifications, requests, messages, growthEvents, growthTasks] = await Promise.all([
     supabase.from("factories").select("id,is_published"),
     supabase.from("verification_records").select("factory_id,verification_type,status"),
     supabase.from("verification_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
     supabase.from("contact_messages").select("id", { count: "exact", head: true }).eq("status", "new"),
+    supabase.from("growth_events").select("id", { count: "exact", head: true }),
+    supabase.from("growth_tasks").select("id", { count: "exact", head: true }).eq("status", "open"),
   ]);
   const rows = factories.data ?? [];
   const checks = verifications.data ?? [];
@@ -32,6 +34,8 @@ export default async function AdminPage() {
     ["Missing evidence", missing("supply_evidence")],
     ["New verification requests", requests.count ?? 0],
     ["New contact messages", messages.count ?? 0],
+    ["Growth events", growthEvents.count ?? 0],
+    ["Open growth tasks", growthTasks.count ?? 0],
   ] as const;
   return (
     <section>

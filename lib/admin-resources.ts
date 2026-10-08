@@ -63,6 +63,12 @@ export const ADMIN_RESOURCES = {
     update: ["slug", "name", "code", "parent_id", "primary_industry", "secondary_category", "description", "product_examples", "common_regions", "is_featured", "sort_order", "seo_title", "seo_description"],
     orderBy: "sort_order",
   },
+  "growth-events": { table: "growth_events", create: [], update: [], orderBy: "occurred_at" },
+  "growth-tasks": { table: "growth_tasks", create: [], update: ["status", "priority", "description", "approved_by", "approved_at", "completed_at"], orderBy: "created_at" },
+  "seo-page-snapshots": { table: "seo_page_snapshots", create: [], update: [], orderBy: "observed_at" },
+  "email-deliveries": { table: "email_deliveries", create: [], update: [], orderBy: "created_at" },
+  "prospect-accounts": { table: "prospect_accounts", create: [], update: ["outreach_status"], orderBy: "created_at" },
+  "prospect-contacts": { table: "prospect_contacts", create: [], update: ["last_contacted_at", "unsubscribed_at", "suppressed_at"], orderBy: "created_at" },
 } as const satisfies Record<string, ResourceConfig>;
 
 export type AdminResource = keyof typeof ADMIN_RESOURCES;

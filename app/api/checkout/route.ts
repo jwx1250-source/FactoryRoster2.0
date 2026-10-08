@@ -7,6 +7,7 @@ import { isPlanSlug } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { safeRecordServerGrowthEvent } from "@/lib/growth";
 
 const schema = z.object({
   plan: z.string(),
@@ -43,6 +44,20 @@ export async function POST(request: Request) {
       : getSiteUrl();
     const stripe = getStripe();
     let customerId = profile?.stripe_customer_id ?? undefined;
+    if (customerId) {
+      try {
+        const existingCustomer = await stripe.customers.retrieve(customerId);
+        if ("deleted" in existingCustomer && existingCustomer.deleted) customerId = undefined;
+      } catch (error) {
+        // Customer IDs are mode-specific. A Test-mode customer stored before
+        // Live launch appears as resource_missing when queried with a Live key.
+        const stripeCode = error && typeof error === "object" && "code" in error
+          ? (error as { code?: unknown }).code
+          : undefined;
+        if (stripeCode === "resource_missing") customerId = undefined;
+        else throw error;
+      }
+    }
     if (!customerId) {
       const customer = await stripe.customers.create({ email: user.email ?? undefined, metadata: { user_id: user.id } });
       customerId = customer.id;
@@ -59,8 +74,18 @@ export async function POST(request: Request) {
       success_url: `${siteUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}&return_to=${encodeURIComponent(returnTo)}`,
       cancel_url: `${siteUrl}${returnTo}?checkout=cancelled`,
     });
+    await safeRecordServerGrowthEvent("checkout_started", { userId: user.id, entityType: "plan", entityId: plan, properties: { return_to: returnTo }, idempotencyKey: `checkout_started:${session.id}` });
     return noStoreJson({ url: session.url });
   } catch (error) {
+    if (error && typeof error === "object" && "type" in error && "message" in error) {
+      const stripeError = error as { type?: unknown; code?: unknown; statusCode?: unknown; message?: unknown };
+      console.error("[checkout] Stripe API error", {
+        type: stripeError.type,
+        code: stripeError.code,
+        statusCode: stripeError.statusCode,
+        message: stripeError.message,
+      });
+    }
     return apiError(error);
   }
 }

@@ -1,5 +1,6 @@
 import { apiError, noStoreJson } from "@/lib/http";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { safeRecordServerGrowthEvent } from "@/lib/growth";
 
 const CONTACT_FIELDS = "contact_person,contact_position:position,verified_phone,verified_email,whatsapp,wechat,contact_verification_method,last_contact_verified_at";
 
@@ -60,6 +61,7 @@ export async function POST(_request: Request, context: RouteContext<"/api/factor
       return noStoreJson({ error: "Insufficient contact credits", code: "INSUFFICIENT_CREDITS" }, { status: 402 });
     }
     if (error) throw error;
+    await safeRecordServerGrowthEvent("contact_unlocked", { userId: authData.user.id, entityType: "supplier", entityId: factory.id, idempotencyKey: `contact_unlocked:${authData.user.id}:${factory.id}` });
     return noStoreJson({ contact: data?.[0] ?? null });
   } catch (error) {
     return apiError(error);

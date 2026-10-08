@@ -706,6 +706,7 @@ function FilterOption({ label, count, active, onClick }: { label: string; count?
 }
 
 function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDetail: (f: SearchResult) => void; onSearch: (q: string) => void }) {
+  const router = useRouter();
   const [localQuery, setLocalQuery] = useState(query);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
   const [primaryIndustry, setPrimaryIndustry] = useState<string | null>(null);
@@ -734,6 +735,9 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
     if (smallOrders) params.set("small_orders", "true");
     if (sampleOrders) params.set("sample_orders", "true");
     if (privateLabel) params.set("private_label", "true");
+    if (activeProvince || primaryIndustry || secondaryCategory || supplierType || moqLevel || supplyModel || smallOrders || sampleOrders || privateLabel) {
+      void fetch("/api/growth/events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ event_name: "filter_applied", path: "/search", entity_type: "search", properties: Object.fromEntries(params.entries()), idempotency_key: `filter_applied:${params.toString()}` }), keepalive: true }).catch(() => undefined);
+    }
     fetch(`/api/factories?${params}`, { signal: controller.signal })
       .then(async (response) => {
         const body = await response.json();
@@ -758,6 +762,13 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
     if (sort === "Est. Year") return b.established - a.established;
     return 0;
   });
+
+  const saveSearch = async () => {
+    const filters = { q: query.trim(), province: activeProvince, primary_industry: primaryIndustry, secondary_category: secondaryCategory, supplier_type: supplierType, moq_level: moqLevel, supply_model: supplyModel, small_orders: smallOrders, sample_orders: sampleOrders, private_label: privateLabel };
+    const response = await fetch("/api/saved-searches", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: query.trim() ? `Suppliers for ${query.trim()}` : "Verified supplier search", filters }) });
+    if (response.status === 401) router.push(`/sign-in?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    if (response.ok) window.alert("Search saved. You can manage alerts in your dashboard.");
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F7F8FA" }}>
@@ -851,7 +862,7 @@ function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDet
                 </button>
               ))}
             </div>
-            <Mono color="#9CA3AF">{filtered.length} results</Mono>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Mono color="#9CA3AF">{filtered.length} results</Mono><button onClick={() => void saveSearch()} style={{ padding: "5px 9px", borderRadius: 6, border: "1px solid #DBEAFE", background: "#fff", color: "#1E40AF", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Save search</button></div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -896,6 +907,7 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
             style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 6, border: "1px solid #1E40AF", background: "#fff", fontSize: 12.5, fontWeight: 600, color: "#1E40AF", cursor: "pointer" }}>
             <LockIcon /> Unlock Contact
           </button>
+          <SaveSupplierButton factoryId={String(r.profile?.id ?? "")} />
         </div>
       </div>
 
@@ -950,6 +962,21 @@ function ResultCard({ result: r, onDetail }: { result: SearchResult; onDetail: (
       </div>
     </div>
   );
+}
+
+function SaveSupplierButton({ factoryId }: { factoryId: string }) {
+  const router = useRouter();
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  if (!factoryId) return null;
+  async function toggle() {
+    setBusy(true);
+    const response = await fetch("/api/saved-suppliers", { method: saved ? "DELETE" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ factory_id: factoryId }) });
+    if (response.status === 401) router.push(`/sign-in?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+    else if (response.ok) setSaved((current) => !current);
+    setBusy(false);
+  }
+  return <button onClick={() => void toggle()} disabled={busy} aria-label={saved ? "Remove saved supplier" : "Save supplier"} style={{ padding: "5px 9px", borderRadius: 6, border: "1px solid #D1D5DB", background: saved ? "#EFF6FF" : "#fff", color: saved ? "#1E40AF" : "#6B7280", fontSize: 12, fontWeight: 600, cursor: busy ? "wait" : "pointer" }}>{saved ? "Saved" : "Save"}</button>;
 }
 
 // ─── Factory Detail Page ───────────────────────────────────────────────────────
@@ -1159,6 +1186,7 @@ function FactoryDetailPage({ factory, fromQuery }: { factory: SearchResult; from
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+              <SaveSupplierButton factoryId={String(profile?.id ?? "")} />
               <button onClick={unlock} disabled={unlockBusy} style={{ padding: "9px 20px", borderRadius: 8, background: "#1E40AF", color: "#fff", fontSize: 13.5, fontWeight: 600, border: "none", cursor: unlockBusy ? "wait" : "pointer", letterSpacing: "-0.1px", opacity: unlockBusy ? 0.7 : 1 }}>
                 {unlockBusy ? "Unlocking…" : contact ? "Contact Unlocked" : "Unlock Contact"}
               </button>
@@ -2658,6 +2686,7 @@ function SignUpPage({ onSignIn, onHome, onNav }: { onSignIn: () => void; onHome:
     setError("");
     setStatus("");
     try {
+      void fetch("/api/growth/events", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ event_name: "signup_started", path: window.location.pathname, properties: { entry: "get_started" }, idempotency_key: `signup_started:${Date.now()}` }), keepalive: true }).catch(() => undefined);
       const response = await fetch("/api/auth/sign-up", {
         method: "POST",
         headers: { "content-type": "application/json" },
