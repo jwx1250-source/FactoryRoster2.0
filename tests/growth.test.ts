@@ -30,4 +30,22 @@ describe("growth automation foundation", () => {
     expect(route).toContain("growth_tasks");
     expect(route).not.toContain("is_published: true");
   });
+
+  it("gates automatic outreach behind provider, eligibility, cadence, and suppression checks", () => {
+    const route = readFileSync(resolve(root, "app/api/cron/outreach/route.ts"), "utf8");
+    expect(route).toContain('OUTREACH_AUTOSEND_ENABLED !== "true"');
+    expect(route).toContain('outreach_status", "approved"');
+    expect(route).toContain('auto_outreach_enabled", true');
+    expect(route).toContain("legal_basis");
+    expect(route).toContain("email_suppressions");
+    expect(route).toContain("sequenceNo > 3");
+    expect(route).toContain("dedupeKey");
+  });
+
+  it("provides a signed unsubscribe endpoint", () => {
+    const route = readFileSync(resolve(root, "app/api/outreach/unsubscribe/route.ts"), "utf8");
+    expect(route).toContain("verifyUnsubscribeToken");
+    expect(route).toContain("unsubscribed_at");
+    expect(route).toContain("email_suppressions");
+  });
 });
