@@ -3,6 +3,7 @@ import { contactPreview } from "@/lib/domain/rules";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const PUBLIC_SUPPLIER_FIELDS = "id,slug,company_name,chinese_name,record_id,province,city,district,address_public,established_year,employee_range,factory_size,annual_revenue_range,main_products,capabilities,export_markets,certifications,trade_terms,moq,website_url,factory_type,supplier_type,supply_evidence_type,moq_level,supports_small_orders,supports_sample_orders,supports_private_label,supply_model,overview,last_verified_at,has_verified_contact,industries!factories_industry_id_fkey(name,slug,code),secondary_category:industries!factories_secondary_category_id_fkey(name,slug)";
+const PUBLIC_VERIFICATION_FIELDS = "verification_type,status,verification_method,verified_at";
 
 export async function GET(_request: Request, context: RouteContext<"/api/factories/[slug]">) {
   try {
@@ -19,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext<"/api/factori
 
     const { data: verifications, error: verificationError } = await supabase
       .from("verification_records")
-      .select("verification_type,status,checked_items,verification_method,verified_at,evidence_note")
+      .select(PUBLIC_VERIFICATION_FIELDS)
       .eq("factory_id", supplier.id)
       .eq("status", "verified");
     if (verificationError) throw verificationError;

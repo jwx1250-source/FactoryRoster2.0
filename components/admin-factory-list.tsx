@@ -25,6 +25,7 @@ type FactoryRow = {
   is_indexable: boolean;
   last_verified_at: string | null;
   updated_at: string;
+  source_notes?: string | null;
 };
 
 const normalizeFilterValue = (value: unknown) => String(value ?? "").trim().toLocaleLowerCase();
@@ -52,6 +53,7 @@ type ListState = {
   smallOrders: string;
   privateLabel: string;
   industry: string;
+  reviewStatus: string;
   scrollY: number;
   editingId?: string;
 };
@@ -72,12 +74,13 @@ export default function AdminFactoryList() {
   const [smallOrders, setSmallOrders] = useState("all");
   const [privateLabel, setPrivateLabel] = useState("all");
   const [industry, setIndustry] = useState("all");
+  const [reviewStatus, setReviewStatus] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const pendingRestore = useRef<{ scrollY: number; editingId?: string } | null>(null);
 
-  const getListState = (): ListState => ({ search, status, province, city, verification, indexing, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel, industry, scrollY: window.scrollY });
+  const getListState = (): ListState => ({ search, status, province, city, verification, indexing, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel, industry, reviewStatus, scrollY: window.scrollY });
 
   useEffect(() => {
     try {
@@ -100,6 +103,7 @@ export default function AdminFactoryList() {
         setSmallOrders(state.smallOrders ?? "all");
         setPrivateLabel(state.privateLabel ?? "all");
         setIndustry(state.industry ?? "all");
+        setReviewStatus(state.reviewStatus ?? "all");
       }, 0);
       return () => window.clearTimeout(restoreFilters);
     } catch {
@@ -142,8 +146,16 @@ export default function AdminFactoryList() {
       const verified = new Set((row.verification_records ?? []).filter((check) => check.status === "verified").map((check) => check.verification_type));
       const verificationMatches = verification === "all" || (verification === "complete" ? verified.size === 3 : verification === "incomplete" ? verified.size < 3 : !verified.has(verification));
       const indexingMatches = indexing === "all" || (indexing === "indexable" ? row.is_indexable : !row.is_indexable);
+      const notes = String(row.source_notes ?? "").toLowerCase();
+      const reviewMatches = reviewStatus === "all"
+        || (reviewStatus === "held_batch" && notes.includes("hold import 2026-10-09"))
+        || (reviewStatus === "missing_location" && (notes.includes("province missing") || notes.includes("city missing")))
+        || (reviewStatus === "missing_classification" && (notes.includes("supplier type missing") || notes.includes("supply model missing") || notes.includes("supply evidence type missing")))
+        || (reviewStatus === "duplicate_candidate" && notes.includes("duplicate candidate"))
+        || (reviewStatus === "existing_overlap" && notes.includes("overlap with existing supplier"));
       const booleanMatches = (filter: string, value: boolean) => filter === "all" || value === (filter === "yes");
       return (!query || haystack.includes(query)) && statusMatches && verificationMatches && indexingMatches
+        && reviewMatches
         && matchesFilter(province, row.province)
         && matchesFilter(city, row.city)
         && matchesFilter(industry, row.industries?.name)
@@ -155,7 +167,7 @@ export default function AdminFactoryList() {
         && booleanMatches(smallOrders, row.supports_small_orders)
         && booleanMatches(privateLabel, row.supports_private_label);
     });
-  }, [rows, search, status, province, city, verification, indexing, industry, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel]);
+  }, [rows, search, status, province, city, verification, indexing, industry, secondaryCategory, supplierType, supplyModel, moqLevel, sampleOrders, smallOrders, privateLabel, reviewStatus]);
 
   const setPrimaryIndustry = (value: string) => { setIndustry(value); setSecondaryCategory("all"); };
   const yesNoOptions = <><option value="yes">Yes</option><option value="no">No</option></>;
@@ -186,6 +198,7 @@ export default function AdminFactoryList() {
       <select aria-label="Supports Private Label" value={privateLabel} onChange={(event) => setPrivateLabel(event.target.value)}><option value="all">Private label: any</option>{yesNoOptions}</select>
       <select aria-label="Verification" value={verification} onChange={(event) => setVerification(event.target.value)}><option value="all">All verification</option><option value="complete">Verification complete</option><option value="incomplete">Verification incomplete</option><option value="government_registration">Missing Government Registration</option><option value="business_contact">Missing Business Contact</option><option value="supply_evidence">Missing Supply Evidence</option></select>
       <select aria-label="Indexing" value={indexing} onChange={(event) => setIndexing(event.target.value)}><option value="all">All indexing</option><option value="indexable">Indexable</option><option value="noindex">Noindex</option></select>
+      <select aria-label="Review status" value={reviewStatus} onChange={(event) => setReviewStatus(event.target.value)}><option value="all">All review status</option><option value="held_batch">Pending batch (69)</option><option value="missing_location">Missing province / city</option><option value="missing_classification">Missing supplier classification</option><option value="duplicate_candidate">Duplicate candidate</option><option value="existing_overlap">Existing overlap candidate</option></select>
       <div className="admin-notice">{filtered.length} shown / {rows.length} total</div>
     </div>
     <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Supplier</th><th>Fit</th><th>Record ID</th><th>Category</th><th>Location</th><th>Verification</th><th>Published</th><th>Indexing</th><th>Last verified</th><th>Updated</th><th>Actions</th></tr></thead><tbody>
