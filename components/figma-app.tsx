@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supplierTypeLabel, supplyEvidenceLabel } from "@/lib/domain/rules";
 import { formatCategoryLabel, PRIMARY_INDUSTRIES } from "@/lib/categories";
+import { industryPagePath, isRestoredCategory } from "@/lib/industry-directory";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -189,7 +190,7 @@ function apiFactoryToResult(factory: Record<string, unknown>): SearchResult {
 
 type Page =
   | { kind: "home" }
-  | { kind: "results"; query: string }
+  | { kind: "results"; query: string; primaryIndustry?: string; secondaryCategory?: string }
   | { kind: "detail"; factory: SearchResult; fromQuery: string }
   | { kind: "industries" }
   | { kind: "verification" }
@@ -705,12 +706,12 @@ function FilterOption({ label, count, active, onClick }: { label: string; count?
   );
 }
 
-function SearchResultsPage({ query, onDetail, onSearch }: { query: string; onDetail: (f: SearchResult) => void; onSearch: (q: string) => void }) {
+function SearchResultsPage({ query, initialPrimaryIndustry, initialSecondaryCategory, onDetail, onSearch }: { query: string; initialPrimaryIndustry?: string; initialSecondaryCategory?: string; onDetail: (f: SearchResult) => void; onSearch: (q: string) => void }) {
   const router = useRouter();
   const [localQuery, setLocalQuery] = useState(query);
   const [activeProvince, setActiveProvince] = useState<string | null>(null);
-  const [primaryIndustry, setPrimaryIndustry] = useState<string | null>(null);
-  const [secondaryCategory, setSecondaryCategory] = useState<string | null>(null);
+  const [primaryIndustry, setPrimaryIndustry] = useState<string | null>(initialPrimaryIndustry ?? null);
+  const [secondaryCategory, setSecondaryCategory] = useState<string | null>(initialSecondaryCategory ?? null);
   const [supplierType, setSupplierType] = useState<string | null>(null);
   const [moqLevel, setMoqLevel] = useState<string | null>(null);
   const [supplyModel, setSupplyModel] = useState<string | null>(null);
@@ -1144,7 +1145,7 @@ function FactoryDetailPage({ factory, fromQuery }: { factory: SearchResult; from
           </>}
           {factory.secondaryCategorySlug && <>
             <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
-            <Link href={`/search?secondary_category=${encodeURIComponent(factory.secondaryCategorySlug)}`} style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>{factory.secondaryCategories?.[0]}</Link>
+            <Link href={isRestoredCategory(factory.secondaryCategorySlug) ? industryPagePath(factory.secondaryCategorySlug) : `/search?${new URLSearchParams({ ...(factory.industrySlug ? { primary_industry: factory.industrySlug } : {}), secondary_category: factory.secondaryCategorySlug })}`} style={{ fontSize: 12.5, color: "#1E40AF", textDecoration: "none" }}>{factory.secondaryCategories?.[0]}</Link>
           </>}
           <span aria-hidden="true" style={{ color: "#D1D5DB", fontSize: 12 }}>/</span>
           <span style={{ fontSize: 12.5, color: "#6B7280" }}>{factory.name}</span>
@@ -1425,9 +1426,9 @@ function FactoryDetailPage({ factory, fromQuery }: { factory: SearchResult; from
 
 const INDUSTRY_CARDS_RICH = PRIMARY_INDUSTRIES.map((industry) => ({ code: industry.code, name: industry.name, slug: industry.slug, desc: industry.description, chips: industry.secondaryCategories.slice(0, 5).map((category) => category.name), supplierTypes: industry.supplierTypes, moqFit: industry.moqFit }));
 
-const INDUSTRY_GROUPS = PRIMARY_INDUSTRIES.map((industry) => ({ group: industry.name, items: industry.secondaryCategories.map((category) => category.name) }));
+const INDUSTRY_GROUPS = PRIMARY_INDUSTRIES.map((industry) => ({ group: industry.name, slug: industry.slug, items: industry.secondaryCategories }));
 
-function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; onNav?: (k: string) => void }) {
+function IndustriesPage({ onSearch, onNav, highlights }: { onSearch: (q: string) => void; onNav?: (k: string) => void; highlights?: React.ReactNode }) {
   const [searchVal, setSearchVal] = useState("");
   const [activeGroup, setActiveGroup] = useState("All");
   const groups = ["All", ...INDUSTRY_GROUPS.map((g) => g.group)];
@@ -1543,16 +1544,16 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
         <div className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "44px 32px" }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.3px", color: "#0D1117", marginBottom: 28 }}>Secondary Categories by Primary Industry</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 28 }}>
-            {INDUSTRY_GROUPS.map(({ group, items }) => (
+            {INDUSTRY_GROUPS.map(({ group, slug, items }) => (
               <div key={group}>
                 <p style={{ fontFamily: "var(--font-mono,'DM Mono',monospace)", fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "#1E40AF", marginBottom: 14 }}>{group}</p>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {items.map((item, ii) => (
-                    <a key={item} href={`/search?q=${encodeURIComponent(item)}`} onClick={(e) => { e.preventDefault(); onSearch(item); }}
+                    <a key={item.slug} href={isRestoredCategory(item.slug) ? industryPagePath(item.slug) : `/search?${new URLSearchParams({ primary_industry: slug, secondary_category: item.slug })}`}
                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", fontSize: 13.5, fontWeight: 400, color: "#374151", textDecoration: "none", borderBottom: ii < items.length - 1 ? "1px solid #F7F8FA" : "none" }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#1E40AF"; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#374151"; }}>
-                      {item}
+                      {item.name}
                       <span style={{ color: "#E5E7EB", flexShrink: 0 }}><ChevronRight size={11} /></span>
                     </a>
                   ))}
@@ -1564,6 +1565,8 @@ function IndustriesPage({ onSearch, onNav }: { onSearch: (q: string) => void; on
       </section>
 
       <section style={{ maxWidth: 860, margin: "0 auto", padding: "0 32px 44px" }}><div style={{ padding: "16px 18px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#fff" }}><p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 8 }}>Verification reading</p><div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{[["Supplier Verification Checklist", "chinese-supplier-verification-checklist"], ["How to Verify a Chinese Supplier", "how-to-verify-a-chinese-supplier"], ["China Supplier Scam Red Flags", "china-supplier-scam-red-flags"]].map(([label, slug]) => <a key={slug} href={`/guides/${slug}`} style={{ color: "#1E40AF", fontSize: 12.5, textDecoration: "none" }}>{label} →</a>)}</div></div></section>
+
+      {highlights}
 
       {/* Bottom CTA */}
       <section className="inner" style={{ maxWidth: 1280, margin: "0 auto", padding: "56px 32px" }}>
@@ -3360,7 +3363,7 @@ function pageFromPath(path: string): Page {
   const url = new URL(path || "/", "http://factoryroster.local");
   const pathname = url.pathname;
   if (pathname === "/") return { kind: "home" };
-  if (pathname === "/search") return { kind: "results", query: url.searchParams.get("q") || "" };
+  if (pathname === "/search") return { kind: "results", query: url.searchParams.get("q") || "", primaryIndustry: url.searchParams.get("primary_industry") || undefined, secondaryCategory: url.searchParams.get("secondary_category") || undefined };
   if (pathname.startsWith("/factories/")) {
     const slug = pathname.split("/").filter(Boolean)[1] || "";
     return { kind: "detail", factory: { ...SEARCH_RESULTS[0], slug }, fromQuery: url.searchParams.get("from") || "" };
@@ -3380,7 +3383,7 @@ function pageFromPath(path: string): Page {
   return { kind: "not-found" };
 }
 
-export default function App({ initialPath = "/", initialSupplier }: { initialPath?: string; initialSupplier?: Record<string, unknown> }) {
+export default function App({ initialPath = "/", initialSupplier, industryHighlights }: { initialPath?: string; initialSupplier?: Record<string, unknown>; industryHighlights?: React.ReactNode }) {
   const router = useRouter();
   const [page, setPage] = useState<Page>(() => {
     const initialPage = pageFromPath(initialPath);
@@ -3450,8 +3453,10 @@ export default function App({ initialPath = "/", initialSupplier }: { initialPat
 
       {page.kind === "results" && (
         <SearchResultsPage
-          key={page.query}
+          key={JSON.stringify([page.query, page.primaryIndustry, page.secondaryCategory])}
           query={page.query}
+          initialPrimaryIndustry={page.primaryIndustry}
+          initialSecondaryCategory={page.secondaryCategory}
           onDetail={(f) => goDetail(f, page.query)}
           onSearch={goResults}
         />
@@ -3465,7 +3470,7 @@ export default function App({ initialPath = "/", initialSupplier }: { initialPat
       )}
 
       {page.kind === "industries" && (
-        <IndustriesPage onSearch={goResults} onNav={handleNav} />
+        <IndustriesPage onSearch={goResults} onNav={handleNav} highlights={industryHighlights} />
       )}
 
       {page.kind === "verification" && (

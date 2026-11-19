@@ -1,3 +1,5 @@
+import { isRedirectedGuide } from "./guide-redirects";
+
 export type GuideClusterId =
   | "discovery"
   | "verification"
@@ -81,7 +83,6 @@ export const guideRoadmap: Array<{ slug: string; title: string; clusterId: Guide
   { slug: "china-supplier-due-diligence", title: "China Supplier Due Diligence", clusterId: "verification", status: "planned" },
   { slug: "how-to-work-with-a-china-supplier", title: "How to Work with a China Supplier", clusterId: "communication", status: "planned" },
   { slug: "china-supplier-order-process", title: "China Supplier Order Process", clusterId: "quality", status: "planned" },
-  { slug: "use-verified-factory-contacts", title: "How to Use Verified Factory Contacts", clusterId: "communication", status: "existing" },
   { slug: "how-to-find-manufacturers-in-china", title: "How to Find Manufacturers in China", clusterId: "discovery", status: "published" },
   { slug: "how-to-contact-chinese-manufacturers", title: "How to Contact Chinese Manufacturers", clusterId: "communication", status: "published" },
   { slug: "how-to-write-an-rfq", title: "How to Write an RFQ", clusterId: "communication", status: "published" },
@@ -258,6 +259,7 @@ const secondBatchGuides: GuideRecord[] = [
   {
     slug: "how-to-contact-chinese-manufacturers", title: "How to Contact Chinese Manufacturers", topic: "Contact & RFQ", clusterId: "communication",
     summary: "Write a short, specific first message that gives a Chinese manufacturer enough information to answer usefully.", readTime: 8,
+    updatedAt: "2026-11-19T00:00:00+08:00",
     seoTitle: "How to Contact Chinese Manufacturers | First Message Guide", seoDescription: "Learn what to include in a first supplier message, how to follow up, and when to use email, Alibaba, WhatsApp, or WeChat.", publishedAt: "2026-10-05T00:00:00Z", source: "built-in", socialHooks: ["Stop sending suppliers send catalog and best price", "What to include in your first message to a Chinese manufacturer", "A copy-paste first supplier message", "8 questions to ask before discussing price"],
     sections: [
       { heading: "The short answer", paragraphs: ["A good first supplier message is short, specific, and easy to answer. It explains who you are, what product you need, the key specification, quantity, destination, customization, questions, and next step."] },
@@ -265,6 +267,7 @@ const secondBatchGuides: GuideRecord[] = [
       { heading: "A weak opening", paragraphs: ["“Hi, send catalog and best price.” This gives the supplier no quantity, product definition, market, or commercial assumptions. The reply is likely to be a generic catalog or an incomparable headline price—not because every supplier is poor, but because the request is incomplete."] },
       { heading: "A copyable first message", callout: "Hello,\n\nWe are sourcing [product] for [market].\n\nInitial requirement:\n- Product: [name/reference]\n- Material/spec: [details]\n- Quantity: [quantity]\n- Packaging: [standard or custom]\n- Destination: [country/city]\n\nPlease confirm:\n1. MOQ\n2. Unit price and price basis\n3. Sample cost and timing\n4. Production lead time\n5. Customization options\n6. Relevant certifications\n\nPlease also confirm whether you are the manufacturer, distributor, exporter, or trading company.\n\nThank you." },
       { heading: "Email, Alibaba, WhatsApp, and WeChat", bullets: ["Email works well for formal requirements, drawings, photos, and a record that can be forwarded internally.", "Alibaba is useful for platform-native communication and keeping the initial inquiry in one marketplace context.", "WhatsApp or WeChat can be efficient for fast follow-up, photos, and short operational questions.", "Keep key commercial information in a saved, reviewable record even if the conversation moves to chat."] },
+      { heading: "After unlocking a verified supplier contact", paragraphs: ["Use the contact record and its verification date to choose a channel for your first message. Ask the recipient to confirm their role and the legal entity that will quote and sign your order. If payment instructions change, confirm them independently through a channel you already trust before sending funds."] },
       { heading: "Questions to ask first", numbered: ["What is the MOQ and how is it calculated?", "What is the price basis and what is included?", "What is the sample cost and timing?", "What is the realistic production lead time?", "What customization is available?", "Are you the manufacturer or another supplier type?", "Which export markets do you serve?", "What payment terms do you use?"] },
       { heading: "Follow-up templates", bullets: ["No reply: “Following up on the [product] request below. Could you confirm MOQ, sample timing, and whether you can quote for [quantity] to [destination]?”", "Incomplete reply: “Thank you. To compare this quote, could you also confirm material, packaging, lead time, and the price basis?”", "Vague answer: “Could you answer the numbered questions one by one? If a point is not available, please mark it as pending.”"] },
       { heading: "Avoid these mistakes", bullets: ["Sending the same generic copy to hundreds of suppliers.", "Asking only for the lowest price while hiding quantity and destination.", "Requesting an NDA before sharing a useful product brief.", "Sending huge attachments immediately or negotiating before the specification is clear."] },
@@ -696,19 +699,6 @@ export const legacyGuideFallbacks: GuideRecord[] = [
     source: "built-in",
     content: "## The short answer\n\nFactoryRoster works best when you use it as a shortlist-building workflow: start with a product or category, filter for supplier type and fit, read the verification labels correctly, compare capabilities, and then contact three to five strong candidates with the same RFQ.\n\n## 1. Start with a precise product or category\n\nDefine the product, materials, dimensions, target quantity, destination market, customization, and timing before you search. A clear brief makes supplier cards comparable and prevents a large directory from becoming an unstructured list of names. Use the industry pages to narrow the product family, then keep the same requirements when you compare profiles.\n\n## 2. Search by supplier type\n\nA manufacturer may be the best fit for repeat production, tooling, or private label. A distributor, exporter, wholesaler, or trading company may be more suitable for low MOQ, mixed products, existing inventory, or faster export coordination. Do not treat a trading supplier as a manufacturer; read the supplier type and supply model together with the evidence labels.\n\n## 3. Read verification status correctly\n\nA public profile must pass Government Registration, Business Contact, and Supply Evidence checks. Those checks answer different questions: who the entity is, whether a business contact works, and whether the claimed supply role has supporting evidence. Verification supports research at a point in time; it does not guarantee quality, pricing, delivery, or transaction outcomes.\n\n## 4. Check manufacturing capability and product fit\n\nReview the product categories, capabilities, MOQ level, sample support, private-label support, location, and available export information. Ask the supplier to confirm current specifications, materials, packaging, production process, equipment, lead time, and certifications for your exact product and market.\n\n## 5. Compare export-market experience\n\nAsk which markets the supplier serves, which documents it can provide, and how it handles shipping, packaging, labeling, and destination requirements. Compare responses using the same RFQ instead of selecting the fastest or cheapest answer.\n\n## 6. Build a shortlist of three to five suppliers\n\nRecord the legal entity, supplier type, key product fit, MOQ, sample terms, open questions, and next action for each candidate. A shortlist makes it easier to notice inconsistent names, beneficiary changes, unrealistic promises, or evidence that does not match the claimed role.\n\n## 7. Unlock contact only after shortlisting\n\nContact credits are most useful after you know why a supplier fits. Prepare a concise outreach message with the product brief, quantity, market, compliance needs, target date, and sample request. Confirm the contact person and legal entity before sharing sensitive commercial information.\n\n## 8. Send an RFQ and verify before payment\n\nCompare the written quote, contract entity, invoice, payment beneficiary, sample result, inspection plan, and lead time. Treat urgent payment pressure or an unrelated beneficiary as a reason to pause and re-check. Use appropriate contracts, staged payments, inspections, and professional trade or legal advice for higher-value orders.\n\n## FactoryRoster verification limitations\n\nFactoryRoster is an informational directory and does not participate in transactions between buyers and suppliers. Verification confirms specific facts at a point in time; it does not guarantee product quality, delivery, pricing, exclusivity, compliance, or a successful transaction.",
   },
-  {
-    slug: "use-verified-factory-contacts",
-    title: "How to Use Verified Factory Contacts",
-    topic: "Contact Intelligence",
-    clusterId: "communication",
-    summary: "Prepare effective outreach after unlocking a verified contact record, while keeping current commercial checks in place.",
-    readTime: 8,
-    seoTitle: "How to Use Verified Factory Contacts",
-    seoDescription: "Use verified contact intelligence for focused factory outreach while keeping buyer due diligence in place.",
-    publishedAt: "2026-09-01T08:00:00Z",
-    source: "built-in",
-    content: "Use the verified contact channel for a concise, specific introduction. Include product requirements, target quantity, destination market, compliance needs, and timing. Confirm the legal entity, beneficiary, sample terms, lead time, and current payment instructions before sharing sensitive information or arranging payment. FactoryRoster does not guarantee quality, delivery, pricing, or transaction outcomes.",
-  },
 ];
 
 const clusterByTopic: Record<string, GuideClusterId> = {
@@ -734,7 +724,7 @@ export function mergeGuides(rows: GuideDatabaseRow[] = []): GuideRecord[] {
   for (const guide of publishedBuiltInGuides) bySlug.set(guide.slug, guide);
   for (const guide of legacyGuideFallbacks) bySlug.set(guide.slug, guide);
   for (const row of rows) {
-    if (!row.slug || !row.title || !row.content) continue;
+    if (!row.slug || !row.title || !row.content || isRedirectedGuide(row.slug)) continue;
     bySlug.set(row.slug, {
       slug: row.slug,
       title: row.title,

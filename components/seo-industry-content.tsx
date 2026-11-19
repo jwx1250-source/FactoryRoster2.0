@@ -1,36 +1,79 @@
-import { PRIMARY_INDUSTRY_BY_SLUG } from "@/lib/categories";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { Breadcrumbs } from "@/components/seo-navigation";
+import { supplierTypeLabel } from "@/lib/domain/rules";
 import { publishedBuiltInGuides } from "@/lib/guides";
 import { industryGuideLinks } from "@/lib/guide-links";
+import { getIndustryDirectory, industryPagePath, INDUSTRY_PAGE_SIZE, isRestoredCategory } from "@/lib/industry-directory";
 
-export default async function SeoIndustryContent({ slug }: { slug: string }) {
-  const industry = PRIMARY_INDUSTRY_BY_SLUG.get(slug);
-  if (!industry) return null;
-  const supabase = createSupabaseAdminClient();
-  const { data: industryRow } = await supabase.from("industries").select("id").eq("slug", slug).maybeSingle();
-  const { data: suppliers, count } = industryRow
-    ? await supabase.from("factories").select("slug,company_name,city,province,overview,main_products,capabilities,supplier_type,certifications,moq", { count: "exact" }).eq("industry_id", industryRow.id).eq("is_published", true).eq("is_indexable", true).order("last_verified_at", { ascending: false }).limit(100)
-    : { data: [], count: 0 };
-  const rows = suppliers ?? [];
-  const guideMap = new Map(publishedBuiltInGuides.map((guide) => [guide.slug, guide]));
-  const resources = (industryGuideLinks[slug] ?? ["how-to-find-manufacturers-in-china", "chinese-supplier-verification-checklist", "how-to-write-an-rfq"]).map((item) => guideMap.get(item)).filter(Boolean);
-  const productTerms = [...new Set(rows.flatMap((row) => String(row.main_products ?? "").split(",").map((item) => item.trim()).filter(Boolean)))].slice(0, 8);
+type Supplier = {
+  slug: string;
+  company_name: string;
+  city: string | null;
+  province: string | null;
+  supplier_type: string;
+  main_products: string[];
+  moq: string | null;
+};
+
+export default function SeoIndustryContent({ directory, suppliers, total, page }: {
+  directory: NonNullable<ReturnType<typeof getIndustryDirectory>>;
+  suppliers: Supplier[];
+  total: number;
+  page: number;
+}) {
+  const { industry, name, slug, description, guidance } = directory;
+  const isPrimary = industry.slug === slug;
+  const path = industryPagePath(slug);
+  const lastPage = Math.ceil(total / INDUSTRY_PAGE_SIZE);
+  const start = (page - 1) * INDUSTRY_PAGE_SIZE + 1;
+  const filterParams = new URLSearchParams({ primary_industry: industry.slug });
+  if (!isPrimary) filterParams.set("secondary_category", slug);
+  const breadcrumb = [{ name: "Home", href: "/" }, { name: "Industries", href: "/industries" }, { name: industry.name, href: industryPagePath(industry.slug) }];
+  if (!isPrimary) breadcrumb.push({ name, href: path });
+  if (page > 1) breadcrumb.push({ name: `Page ${page}`, href: industryPagePath(slug, page) });
+
+  const resources = (industryGuideLinks[industry.slug] ?? []).flatMap((guideSlug) => {
+    const guide = publishedBuiltInGuides.find((item) => item.slug === guideSlug);
+    return guide ? [guide] : [];
+  });
+
   return (
-    <div style={{ background: "#fff", borderBottom: "1px solid #E9ECF1" }}>
-      <Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Industries", href: "/industries" }, { name: industry.name, href: `/industries/${industry.slug}` }]} />
-      <section style={{ maxWidth: 1280, margin: "0 auto", padding: "16px 32px 32px" }}>
-        <p style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6B7280", margin: "0 0 8px" }}>Verified China supplier intelligence</p>
-        <h1 style={{ fontSize: 30, lineHeight: 1.15, margin: "0 0 10px", color: "#0D1117" }}>China {industry.name} Manufacturers</h1>
-        <p style={{ maxWidth: 760, color: "#4B5563", lineHeight: 1.65, margin: "0 0 10px" }}>{industry.description} FactoryRoster lists suppliers in this category only after verification.</p>
-        <p style={{ color: "#6B7280", margin: "0 0 22px" }}>{count ?? rows.length} published suppliers in this industry.</p>
-        {productTerms.length > 0 && <p style={{ color: "#6B7280", fontSize: 13, margin: "0 0 20px" }}><strong>Products represented:</strong> {productTerms.join(", ")}</p>}
-        <section aria-label="Buyer resources" style={{ margin: "0 0 28px", padding: "16px 18px", border: "1px solid #E9ECF1", borderRadius: 10, background: "#F9FAFB" }}><h2 style={{ fontSize: 18, margin: "0 0 8px", color: "#0D1117" }}>Buyer resources for {industry.name}</h2><p style={{ color: "#6B7280", margin: "0 0 12px", fontSize: 13 }}>Practical guides for comparing and contacting suppliers in this category.</p><div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{resources.map((guide) => guide && <a key={guide.slug} href={`/guides/${guide.slug}`} style={{ color: "#1E40AF", textDecoration: "none", fontSize: 13, padding: "7px 10px", borderRadius: 6, background: "#fff", border: "1px solid #DBEAFE" }}>{guide.title} →</a>)}</div></section>
-        <h2 style={{ fontSize: 20, margin: "0 0 12px", color: "#0D1117" }}>Manufacturers in {industry.name}</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 10 }}>
-          {rows.map((supplier) => <a key={supplier.slug} href={`/factories/${supplier.slug}`} style={{ display: "block", padding: "12px 14px", border: "1px solid #E9ECF1", borderRadius: 8, color: "#1E40AF", textDecoration: "none" }}><strong>{supplier.company_name}</strong><span style={{ display: "block", marginTop: 4, color: "#6B7280", fontSize: 12 }}>{[supplier.city, supplier.province].filter(Boolean).join(", ") || "China"}</span></a>)}
+    <main className="industry-directory">
+      <Breadcrumbs items={breadcrumb} />
+      <div className="industry-directory-body">
+        <h1>Verified China {name} Suppliers</h1>
+        {description && <p>{description}</p>}
+        {page === 1 && guidance && <section className="industry-directory-guidance">
+          <h2>What to check before requesting a quote</h2>
+          <p>{guidance}</p>
+        </section>}
+        {page === 1 && isPrimary && <nav aria-label="Product categories" className="industry-directory-categories">
+          {industry.secondaryCategories.map((category) => <a key={category.slug} href={isRestoredCategory(category.slug) ? industryPagePath(category.slug) : `/search?${new URLSearchParams({ primary_industry: slug, secondary_category: category.slug })}`}>{category.name}</a>)}
+        </nav>}
+        <div className="industry-directory-list-heading">
+          <h2>Supplier listings</h2>
+          <a href={`/search?${filterParams}`}>Filter suppliers</a>
         </div>
-      </section>
-    </div>
+        <p>{total > 0 ? `Showing ${start}–${start + suppliers.length - 1} of ${total} verified suppliers` : "No suppliers are currently listed in this industry."}</p>
+        <ul className="industry-directory-grid">
+          {suppliers.map((supplier) => (
+            <li key={supplier.slug}>
+              <a href={`/factories/${supplier.slug}`}>{supplier.company_name}</a>
+              <p>{[supplier.city, supplier.province].filter(Boolean).join(", ") || "China"} · {supplierTypeLabel(supplier.supplier_type)}</p>
+              {supplier.main_products.length > 0 && <p>{supplier.main_products.slice(0, 3).join(" · ")}</p>}
+              {supplier.moq && <p>MOQ: {supplier.moq}</p>}
+            </li>
+          ))}
+        </ul>
+        {lastPage > 1 && <nav aria-label="Supplier list pages" className="industry-directory-pagination">
+          {page > 1 && <a href={industryPagePath(slug, page - 1)} rel="prev">Previous</a>}
+          <span aria-current="page">Page {page} of {lastPage}</span>
+          {page < lastPage && <a href={industryPagePath(slug, page + 1)} rel="next">Next</a>}
+        </nav>}
+        {page === 1 && resources.length > 0 && <section className="industry-directory-guidance">
+          <h2>Buyer resources</h2>
+          <ul>{resources.map((guide) => <li key={guide.slug}><a href={`/guides/${guide.slug}`}>{guide.title}</a></li>)}</ul>
+        </section>}
+      </div>
+    </main>
   );
 }

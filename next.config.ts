@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { guideRedirects } from "./lib/guide-redirects";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -11,12 +12,11 @@ const nextConfig: NextConfig = {
       { source: "/for-suppliers", destination: "/contact", permanent: true },
       { source: "/report-incorrect", destination: "/contact", permanent: true },
       { source: "/how-factoryroster-works", destination: "/verification", permanent: true },
-      { source: "/guides/manufacturer-vs-trading-company-china", destination: "/guides", permanent: true },
-      { source: "/guides/how-to-write-custom-packaging-rfq", destination: "/guides", permanent: true },
-      { source: "/guides/common-packaging-certifications-explained", destination: "/guides", permanent: true },
-      { source: "/guides/how-to-find-china-packaging-manufacturers", destination: "/guides", permanent: true },
-      { source: "/guides/how-to-evaluate-china-factory-profiles", destination: "/guides", permanent: true },
-      { source: "/guides/china-packaging-supplier-checklist", destination: "/guides", permanent: true },
+      ...Object.entries(guideRedirects).map(([from, to]) => ({
+        source: `/guides/${from}`,
+        destination: to ? `/guides/${to}` : "/guides",
+        permanent: true,
+      })),
       { source: "/china-manufacturers/mailer-boxes", destination: packagingIndustry, permanent: true },
       { source: "/china-manufacturers/labels-and-stickers", destination: packagingIndustry, permanent: true },
       { source: "/china-manufacturers/cosmetic-packaging", destination: packagingIndustry, permanent: true },
